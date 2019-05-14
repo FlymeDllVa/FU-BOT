@@ -1,0 +1,20 @@
+{
+    "135069937": {
+        "user_group": "ПИ18-1",
+        "user_id": "135069937",
+        "user_status": "MENU",
+        "user_teacher": null
+    },
+    "138736464": {
+        "user_group": "БИ18-2",
+        "user_id": "138736464",
+        "user_status": "FIND_PREPOD",
+        "user_teacher": null
+    },
+    "141251717": {
+        "user_group": null,
+        "user_id": "141251717",
+        "user_status": "CHAT",
+        "user_teacher": null
+    }
+}
