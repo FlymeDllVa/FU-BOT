@@ -115,7 +115,7 @@ def main(bot):
 					bot.vk.messages.send (
 								peer_id=user_id,
 								random_id=get_random_id(),
-								message=f'Не удалось найти {group_name}"',
+								message=f'Не удалось найти {group_name}',
 							)
 				bot.message_menu(user_id)
 			## CHANGE_GROUP END
