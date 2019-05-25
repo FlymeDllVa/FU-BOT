@@ -117,6 +117,10 @@ def main(bot):
 									random_id=get_random_id(),
 									message='Введите название вашей группы. Например: "ПИ18-1"',
 								)
+				elif event.obj.text.lower() == "подписки на рассылки":
+					bot.change_status_user(user_id, "FIRST_SETUP")
+					bot.create_clear_newsletter(user_id)
+					bot.newsSubscription(user_id)
 				else:
 					bot.message_settings(user_id)
 			### SETTINGS END
