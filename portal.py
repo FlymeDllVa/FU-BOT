@@ -36,7 +36,6 @@ def find_teacher(session, name):
 		return response[0]['id'], response[0]['name']
 
 def parse_schedule_prepod(table, day, w):
-	print(table)
 	"""
 	Функция для парсинга html таблицы в удобный для просмотра вид
 	:param table: html-таблица

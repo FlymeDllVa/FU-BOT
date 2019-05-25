@@ -18,7 +18,32 @@ def main(bot):
 			print('Для меня от: ', end='')
 			print(event.obj.peer_id)
 			print('Текст:', event.obj.text)
-			if bot.check_status_user(user_id) == "MENU":
+			
+			bot.add_statistics_requests()
+			if event.obj.text.lower() == "начать":
+					bot.check_status_user(user_id)
+					bot.change_status_user(user_id, "FIRST_START")
+					bot.message_distribution_start(user_id)
+			elif bot.check_status_user(user_id) == "FIRST_START":
+				if event.obj.text.lower() == "да":
+					bot.change_status_user(user_id, "FIRST_SETUP")
+					bot.create_clear_newsletter(user_id)
+					bot.newsSubscription(user_id)
+				elif event.obj.text.lower() == "нет":
+					bot.change_status_user(user_id, "MENU")
+					bot.message_menu(user_id)
+				else:
+					bot.message_distribution_start(user_id)
+			elif bot.check_status_user(user_id) == "FIRST_SETUP":
+				if event.obj.text.lower() in config.DISTRIBUTION:
+					bot.check_newsletter(user_id, event.obj.text.lower())
+					bot.newsSubscription(user_id)
+				elif event.obj.text.lower() == "перейти к меню":
+					bot.change_status_user(user_id, "MENU")
+					bot.message_menu(user_id)
+				else:
+					bot.newsSubscription(user_id)
+			elif bot.check_status_user(user_id) == "MENU":
 				if event.obj.text.lower() == "сегодня":
 					bot.vk.messages.send (
 										peer_id=user_id,
@@ -68,7 +93,7 @@ def main(bot):
 									message='Введите название вашей группы. Например: "ПИ18-1"',
 								)
 					bot.change_status_user(user_id, "CHANGE_GROUP")
-				elif event.obj.text.lower() == "задать вопрос":
+				elif event.obj.text.lower() == "написать нам":
 					bot.vk.messages.send (
 									peer_id=user_id,
 									random_id=get_random_id(),
@@ -154,8 +179,7 @@ def main(bot):
 					bot.data[user_id]["user_teacher"] = None
 					bot.writeData()
 					bot.message_menu(user_id)
-			### FIND PREPOD END
-
+			print(bot.data[user_id]["user_status"])
 		else:
 			print(event.type)
 			print()
@@ -167,5 +191,5 @@ if __name__ == '__main__':
 		try: 
 			main(bot)
 		except Exception as error:
-			print('error', error)
+			bot.print_error_logs(error)
 			time.sleep(1)
