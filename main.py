@@ -1,26 +1,49 @@
-import config
-import vk_api
 import time
+import threading
+import schedule
+import vk_api
+import config
 from portal import auth, find_teacher, parse_schedule_prepod, get_schedule, get_schedule_prepod
 from bot import Bot
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
 
+def start_bot():
+	global bot
+	bot.print_info_logs("BOT запущен")
+	while True:
+		try:
+			main(bot)
+		except Exception as error:
+			bot.print_error_logs(error)
+			time.sleep(1)
+
+def start_worker():
+	global bot
+	bot.print_info_logs("CRON запущен")
+	schedule.every().minute.at(":00").do(schedule_distribution)
+	while True:
+		schedule.run_pending()
+		time.sleep(1)
 
 def main(bot):
-	print('Бот запустился')
 	for event in bot.longpoll.listen():
 		if event.type == VkBotEventType.MESSAGE_NEW:
-			print(event.obj.peer_id)
 			user_id = str(event.obj.peer_id)
-			print('Новое сообщение:')
-			print('Для меня от: ', end='')
-			print(event.obj.peer_id)
-			print('Текст:', event.obj.text)
-			
 			bot.print_info_logs(f"{user_id} -> {event.obj.text.lower()}")
 			bot.add_statistics_requests()
+
+			# print('Новое сообщение:')
+			# print('Для меня от: ', end='')
+			# print(event.obj.peer_id)
+			# print('Текст:', event.obj.text)
+			# if event.from_user:
+			# 	print(user_id)
+			# if event.from_chat:
+			# 	print(user_id, 'в беседе', event.chat_id)
+
+			
 			if event.obj.text.lower() == "начать":
 					bot.check_status_user(user_id)
 					bot.change_status_user(user_id, "FIRST_START")
@@ -193,12 +216,14 @@ def main(bot):
 			print(event.type)
 			print()
 
+def schedule_distribution():
+    print(time.asctime())
 
 if __name__ == '__main__':
+	# print(time.asctime())
 	bot = Bot(config.TOKEN, config.GROUP_ID)
-	while True:
-		try: 
-			main(bot)
-		except Exception as error:
-			bot.print_error_logs(error)
-			time.sleep(1)
+	for i in range(2):
+		if i == 0: flow = threading.Thread(target=start_worker)
+		if i == 1: flow = threading.Thread(target=start_bot)
+		flow.start()
+	
