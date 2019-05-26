@@ -19,6 +19,7 @@ def main(bot):
 			print(event.obj.peer_id)
 			print('Текст:', event.obj.text)
 			
+			bot.print_info_logs(f"{user_id} -> {event.obj.text.lower()}")
 			bot.add_statistics_requests()
 			if event.obj.text.lower() == "начать":
 					bot.check_status_user(user_id)
@@ -73,10 +74,12 @@ def main(bot):
 									)		
 					bot.message_menu(user_id)
 				elif event.obj.text.lower() == "поиск преподавателя":
+	
 					bot.vk.messages.send (
 									peer_id=user_id,
 									random_id=get_random_id(),
 									message='Введите фамилию или ФИО преподавателя',
+									keyboard=VkKeyboard().get_empty_keyboard(),
 								)
 					bot.change_status_user(user_id, "FIND_PREPOD")
 				elif event.obj.text.lower() == "мероприятия":
@@ -91,13 +94,14 @@ def main(bot):
 									peer_id=user_id,
 									random_id=get_random_id(),
 									message='Введите название вашей группы. Например: "ПИ18-1"',
+									keyboard=VkKeyboard().get_empty_keyboard(),
 								)
 					bot.change_status_user(user_id, "CHANGE_GROUP")
 				elif event.obj.text.lower() == "написать нам":
 					bot.vk.messages.send (
 									peer_id=user_id,
 									random_id=get_random_id(),
-									message='Добрый день! Напишите ваш вопрос и мы обязательно ответим на него\nДля выхода из чата напиште: "Выход"',
+									message='Добрый день! Напишите ваш вопрос и мы обязательно ответим на него\nДля выхода из чата напишите: "Выход"',
 								)
 					bot.change_status_user(user_id, "CHAT")
 				elif event.obj.text.lower() == "настройки" or event.obj.text.lower() == "настроики":
@@ -116,6 +120,7 @@ def main(bot):
 									peer_id=user_id,
 									random_id=get_random_id(),
 									message='Введите название вашей группы. Например: "ПИ18-1"',
+									keyboard=VkKeyboard().get_empty_keyboard(),
 								)
 				elif event.obj.text.lower() == "подписки на рассылки":
 					bot.change_status_user(user_id, "FIRST_SETUP")

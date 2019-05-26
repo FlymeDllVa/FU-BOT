@@ -34,6 +34,7 @@ class Logger:
 		print(data)
 	
 	def print_error_logs(self, data):
+		self.print_info_logs(data)
 		self.writeLogs(f"{time.asctime()} | {str(data)}", "logs/errors.log")
 		print(data)
 
@@ -65,7 +66,7 @@ class Bot(Distribution, Logger):
 			return self.readStatistics()
 	
 	def writeStatistics(self):
-		with io.open('statistics.json', 'w', encoding='utf8') as json_file:
+		with io.open('base/statistics.json', 'w', encoding='utf8') as json_file:
 			json.dump(self.statistics, json_file, ensure_ascii=False, indent=4, sort_keys=True)
 	
 	# Data
@@ -82,7 +83,6 @@ class Bot(Distribution, Logger):
 	def writeData(self):
 		with io.open('base/data.json', 'w', encoding='utf8') as json_file:
 			json.dump(self.data, json_file, ensure_ascii=False, indent=4, sort_keys=True)
-
 	
 	def check_status_user(self, user_id):
 		self.add_statistics_people(len(self.data))
@@ -124,9 +124,8 @@ class Bot(Distribution, Logger):
 			else:
 				return None
 	
-
 	def message_menu(self, user_id):		
-		keyboard = VkKeyboard(one_time=True)
+		keyboard = VkKeyboard()
 
 #		keyboard.add_button('Мероприятия', color=VkKeyboardColor.NEGATIVE)
 #		keyboard.add_line()
@@ -180,7 +179,7 @@ class Bot(Distribution, Logger):
 	FIRST_START
 	"""
 	def message_distribution_start(self, user_id):		
-		keyboard = VkKeyboard(one_time=True)
+		keyboard = VkKeyboard()
 
 		keyboard.add_button('Да', color=VkKeyboardColor.POSITIVE)
 		keyboard.add_line()
@@ -210,18 +209,26 @@ class Bot(Distribution, Logger):
 		self.writeData()
 
 	def newsSubscription(self, user_id):
-		keyboard = VkKeyboard(one_time=True)
+		keyboard = VkKeyboard()
 		
-		if self.data[str(user_id)]["user_newsletter"]["мероприятия"] == True:
-			keyboard.add_button('Мероприятия', color=VkKeyboardColor.POSITIVE)
+		if self.data[str(user_id)]["user_newsletter"]["научные конференции"] == True:
+			keyboard.add_button('Научные конференции', color=VkKeyboardColor.POSITIVE)
 		else:
-			keyboard.add_button('Мероприятия', color=VkKeyboardColor.DEFAULT)
+			keyboard.add_button('Научные конференции', color=VkKeyboardColor.DEFAULT)
 		keyboard.add_line()
+		
+		if self.data[str(user_id)]["user_newsletter"]["культурно-массовые мероприятия"] == True:
+			keyboard.add_button('Культурно-массовые мероприятия', color=VkKeyboardColor.POSITIVE)
+		else:
+			keyboard.add_button('Культурно-массовые мероприятия', color=VkKeyboardColor.DEFAULT)
+		keyboard.add_line()
+
 		if self.data[str(user_id)]["user_newsletter"]["спорт"] == True:
 			keyboard.add_button('Спорт', color=VkKeyboardColor.POSITIVE)
 		else:
 			keyboard.add_button('Спорт', color=VkKeyboardColor.DEFAULT)
 		keyboard.add_line()
+
 		keyboard.add_button('Перейти к меню', color=VkKeyboardColor.PRIMARY)
 		
 		self.vk.messages.send (
@@ -233,7 +240,7 @@ class Bot(Distribution, Logger):
 		self.writeData()
 	
 	def message_find_menu(self, user_id, teacher):
-		keyboard = VkKeyboard(one_time=True)
+		keyboard = VkKeyboard()
 		
 		keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE)	
 		keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT)
@@ -243,7 +250,7 @@ class Bot(Distribution, Logger):
 		keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT)
 		keyboard.add_line()
 		
-		keyboard.add_button('Назад к меню', color=VkKeyboardColor.DEFAULT)
+		keyboard.add_button('Назад к меню', color=VkKeyboardColor.PRIMARY)
 		self.vk.messages.send (
 				peer_id=user_id,
 				random_id=get_random_id(),
@@ -253,7 +260,7 @@ class Bot(Distribution, Logger):
 		self.writeData()
 		
 	def message_settings(self, user_id):
-		keyboard = VkKeyboard(one_time=True)
+		keyboard = VkKeyboard()
 
 		if self.data[user_id]["user_group"] != None:
 			keyboard.add_button('Выбрать группу', color=VkKeyboardColor.DEFAULT)
@@ -262,10 +269,10 @@ class Bot(Distribution, Logger):
 			keyboard.add_button('Сменить группу', color=VkKeyboardColor.DEFAULT)
 			keyboard.add_line()
 		
-		keyboard.add_button('Подписки на рассылки', color=VkKeyboardColor.NEGATIVE)	
+		keyboard.add_button('Подписки на рассылки', color=VkKeyboardColor.DEFAULT)	
 		keyboard.add_line()
 		
-		keyboard.add_button('Назад к меню', color=VkKeyboardColor.DEFAULT)		
+		keyboard.add_button('Назад к меню', color=VkKeyboardColor.PRIMARY)		
 		
 		self.vk.messages.send (
 				peer_id=user_id,
