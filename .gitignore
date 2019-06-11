@@ -24,3 +24,4 @@ bot.db
 config.py
 migrations/versions/bb991310c932_.py
 __pycache__/config.cpython-37.pyc
+config.py
