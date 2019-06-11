@@ -1,3 +1,6 @@
+import requests
+
+from app.vk.src.portal import *
 from app import db
 
 """
@@ -75,23 +78,48 @@ class Model(object):
         """
         group = Groups.query.filter(Groups.group_name == group_name).first()
         if group is not None:
-            return group.group_name
+            return group.group_id
         return None
 
     """
     Schedule
     """
 
-    def update_schedule(self, user, group):
-        schedule = Schedule.query.filter_by(date="01/01/1999", group_name=group).first()
-        if schedule is not None:
-            for object in range(len(schedule.objects)):
-                db.session.delete(schedule.objects[object])
-            # TODO дописать, что делать когда база очистилась
-        else:
-            pass
-            # TODO дописать, что делать если в базе нет расписания
+    def update_schedule(self, user, days_update=13):
+        """
+        Обновляет расписание в базе данных
+        :param user: данные user в базе данных
+        :param days_update: на сколько дней вперед обновлять базу
+        :return:
+        """
+        session = authorization(Config.LOGIN, Config.PASSWORD, max_attempt=3)
+        if session is None: return None
+        user_group_name = user.user_group
+        user_group_id = self.check_group(user_group_name)
+        today = (datetime.datetime.today() + datetime.timedelta(hours=0)).strftime('%d/%m/%Y')
+        weekday = (datetime.datetime.today() + datetime.timedelta(hours=0)).weekday()
+        for delta in range(days_update):
+            day = (datetime.datetime.today() + datetime.timedelta(days=delta - weekday, hours=0)).strftime('%d/%m/%Y')
+            data = parse_schedule(session.post('https://portal.fa.ru/Job/SearchAjax',
+                                               data={'Date': today, 'DateBegin': day,
+                                                     'DateEnd': day, 'JobType': 'GROUP',
+                                                     'GroupId': user_group_id}).text, day, delta - 7)
+            schedule = Schedule.query.filter_by(date=day, group_name=user_group_name).first()
+            if schedule is not None:
+                for object in range(len(schedule.objects)):
+                    db.session.delete(schedule.objects[object])
+            else:
+                schedule = Schedule(date=day, group_name=user_group_name)
+            for object in data:
+                if object is not None:
+                    schedule.objects.append(ScheduleObject(pair_time=object["pair_time"],
+                                                           pair_name=object["pair_name"],
+                                                           pair_type = object["pair_type"],
+                                                           pair_location=object["pair_location"],
+                                                           pair_teacher=object["pair_teacher"]))
+            db.session.add(schedule)
         db.session.commit()
+        return True
 
 
 """
@@ -117,6 +145,11 @@ class Schedule(db.Model):
 
 class ScheduleObject(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    time = db.Column(db.String(64))
+    pair_time = db.Column(db.String(256))
+    pair_name = db.Column(db.String(256))
+    pair_type = db.Column(db.String(256))
+    pair_location = db.Column(db.String(256))
+    pair_teacher = db.Column(db.String(256))
+
     schedule = db.relationship("Schedule", backref="objects")
     schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id', ondelete='CASCADE'))
