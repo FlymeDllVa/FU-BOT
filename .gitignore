@@ -1,2 +1,23 @@
 
 config.py
+.idea/codeStyles/codeStyleConfig.xml
+.idea/dataSources.local.xml
+.idea/dataSources.xml
+.idea/dataSources/492ee269-ea42-44b6-945e-366eedebad7c.xml
+.idea/flask-bot.iml
+.idea/libraries/R_User_Library.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.vscode/launch.json
+*.pyc
+.DS_Store
+app/routes.py
+groups.json
+migrations/versions/4093c731cdbf_.py
+migrations/script.py.mako
+migrations/README
+migrations/env.py
+migrations/alembic.ini
+bot.db
