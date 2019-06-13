@@ -10,3 +10,4 @@ migrate = Migrate(app, db)
 
 from app import routes, models
 from app.models import Users, Groups, Schedule, ScheduleObject
+from app.vk.runner import *
