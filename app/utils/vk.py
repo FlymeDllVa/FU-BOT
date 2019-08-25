@@ -5,7 +5,7 @@ from app.utils.keyboards import Keyboards
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
-from app.utils.server import get_schedule, format_schedule
+from app.utils.server import get_schedule, get_teacher, format_schedule
 from app.models import User
 
 
@@ -157,7 +157,7 @@ class Bot:
     Методы расписания
     """
 
-    def send_schedule(self, user, start_day: int = 0, days: int = 1) -> User:
+    def send_schedule(self, user, start_day: int = 0, days: int = 1) -> User or None:
         """
         Отсылает пользователю расписание
 
@@ -171,7 +171,13 @@ class Bot:
             self.main_menu(user=user, message="Пожайлуста, выберите пункт из меню")
             return user
         schedule = format_schedule(group_name=user.group_name, start_day=start_day, days=days)
-
+        if schedule is None:
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message="Не удалось получить расписание",
+            )
+            return None
         self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -235,8 +241,8 @@ class Bot:
         """
         try:
             time = datetime.datetime.strptime(time, "%H:%M").strftime("%H:%M")
-            user = User.update_user(user=user,data=dict(subscription_time=time,
-                                                        subscription_group=user.group_name))
+            user = User.update_user(user=user, data=dict(subscription_time=time,
+                                                         subscription_group=user.group_name))
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -283,5 +289,67 @@ class Bot:
             )
         return user
 
+    """
+    Поиск преподавателя
+    """
 
+    def search_teacher(self, user):
+        """
+        Отправляет сообщение с просьбой ввести ФИО преподавателя
 
+        :param user:
+        :return:
+        """
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message="Введите фамилию или ФИО преподавателя",
+            keyboard=self.keyboard.empty_keyboard()
+        )
+        return user
+
+    def search_teacher_schedule(self, user, teacher_name):
+        teacher = get_teacher(teacher_name)
+        if isinstance(teacher, dict):
+            User.update_user(user=user, data=dict(found_teacher_id=teacher['id'], found_teacher_name=teacher['name']))
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message=f"Найденный преподаватель: {teacher['name']}\nВыберите промежуток",
+                keyboard=self.keyboard.find_teacher_menu(user)
+            )
+            return user
+        else:
+            User.update_user(user=user, data=dict(found_teacher_id=None, found_teacher_name=None))
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message=f"Преподаватель не найден",
+            )
+            return None
+
+    def send_teacher_schedule(self, user, start_day: int = 0, days: int = 1) -> User or None:
+        """
+        Отсылает пользователю расписание преподавателя
+
+        :param start_day:
+        :param user:
+        :param days:
+        :return:
+        """
+
+        schedule = format_schedule(start_day=start_day, days=days, teacher=dict(id=user.found_teacher_id,
+                                                                                name=user.found_teacher_name))
+        if schedule is None:
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message="Не удалось получить расписание",
+            )
+            return None
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message=schedule,
+        )
+        return user

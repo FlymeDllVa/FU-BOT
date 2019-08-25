@@ -8,6 +8,8 @@ class User(db.Model):
     update = db.Column(db.String, default="1.0")
     position = db.Column(db.String, default="START")
     group_name = db.Column(db.String, default=None)
+    found_teacher_id = db.Column(db.Integer, default=None)
+    found_teacher_name = db.Column(db.String, default=None)
     subscription_time = db.Column(db.String, default=None)
     subscription_days = db.Column(db.String, default=None)
     subscription_group = db.Column(db.String, default=None)

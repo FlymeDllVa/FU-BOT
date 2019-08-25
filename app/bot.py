@@ -61,8 +61,7 @@ def vk_bot_from_user(bot, event):
         elif message_lower == "следующая неделя":
             bot.send_schedule(user, start_day=7, days=7)
         elif message_lower == "поиск преподавателя":
-            # TODO Дописать поиск преподавателя
-            pass
+            bot.search_teacher(User.change_position(user, "SEARCH_TEACHER_NAME"))
         elif message_lower == "настройки":
             bot.settings(User.change_position(user, "SETTINGS"))
         else:
@@ -109,6 +108,30 @@ def vk_bot_from_user(bot, event):
         else:
             bot.error_data(user, message="Выберите промежуток в меню")
 
+    # Поиск препода
+    elif user.position == "SEARCH_TEACHER_NAME":
+        teacher = bot.search_teacher_schedule(user, message_lower)
+        if teacher is None:
+            bot.main_menu(User.change_position(user, "MAIN_MENU"))
+        else:
+            User.change_position(user, "SEARCH_TEACHER_DAY")
+
+    elif user.position == "SEARCH_TEACHER_DAY":
+        if message_lower in ("сегодня", "завтра", "сегодня и завтра", "эта неделя", "следующая неделя"):
+            if message_lower == "сегодня":
+                bot.send_teacher_schedule(user, days=1)
+            elif message_lower == "завтра":
+                bot.send_teacher_schedule(user, start_day=1, days=1)
+            elif message_lower == "сегодня и завтра":
+                bot.send_teacher_schedule(user, days=2)
+            elif message_lower == "эта неделя":
+                bot.send_teacher_schedule(user, days=7)
+            elif message_lower == "следующая неделя":
+                bot.send_teacher_schedule(user, start_day=7, days=7)
+            bot.main_menu(User.change_position(user, "MAIN_MENU"))
+        elif message_lower == "отмена":
+            bot.main_menu(User.change_position(user, "MAIN_MENU"))
+
 
 def vk_bot_from_chat(bot, event):
     """
@@ -121,5 +144,3 @@ def vk_bot_from_chat(bot, event):
 
     print(f"Сообщение в беседе {event.chat_id}")
     # TODO Дописать функцианал для бесед
-
-

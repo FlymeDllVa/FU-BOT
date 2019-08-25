@@ -54,17 +54,55 @@ def get_schedule(group_name: str) -> dict or None:
     return request.json()
 
 
-def format_schedule(group_name: str, start_day: int = 0, days: int = 1) -> str or None:
+def get_teacher_schedule(teacher: dict):
+    """
+    Запрашивает расписание преподавателя у сервера
+
+    :param teacher:
+    :return:
+    """
+    session = requests.session()
+    request = session.post(f"{SERVER_URL}api/v1/schedule/teacher",
+                           json={"id": teacher['id'], "name": teacher['name']}, timeout=2)
+    if not request.status_code == 200:
+        return None
+    return request.json()
+
+
+def get_teacher(teacher_name: str) -> dict or None:
+    """
+    Запрашивает расписание у сервера
+
+    :param teacher_name:
+    :return:
+    """
+
+    session = requests.session()
+    request = session.post(f"{SERVER_URL}api/v1/teacher", json={"name": teacher_name}, timeout=2)
+    if not request.status_code == 200:
+        return None
+    request = request.json()
+    if len(request) > 0:
+        return dict(id=request[0][0], name=request[0][1])
+    return None
+
+
+def format_schedule(group_name: str = None, start_day: int = 0, days: int = 1, teacher: dict = None) -> str or None:
     """
     Форматирует расписание к виду который отправляет бот
 
+    :param teacher:
     :param start_day:
     :param group_name:
     :param days:
     :return:
     """
 
-    schedule = get_schedule(group_name)
+    if teacher is not None:
+        schedule = get_teacher_schedule(teacher)
+    else:
+        schedule = get_schedule(group_name)
+
     if schedule is None:
         return None
 
@@ -80,15 +118,24 @@ def format_schedule(group_name: str, start_day: int = 0, days: int = 1) -> str o
                 text += f"{lesson['name']}\n"
                 if lesson['type']:
                     text += f"{lesson['type']}\n"
-                if lesson['audience']:
-                    text += f"Где: {lesson['audience']}\n"
-                teachers = format_name(lesson['teachers'])
-                if teachers:
-                    text += f"Кто: {teachers}"
+                if teacher is not None:
+                    if len(lesson['groups'].split(', ')) > 1:
+                        text += "Группы: "
+                    else:
+                        text += "Группы: "
+                    text += f"{lesson['groups']}\n"
+                    if lesson['audience']:
+                        text += f"Кабинет: {lesson['audience']}\n"
+                    text += f"{lesson['location']}"
+                if group_name is not None:
+                    if lesson['audience']:
+                        text += f"Где: {lesson['audience']}\n"
+                    teachers = format_name(lesson['teachers'])
+                    if teachers:
+                        text += f"Кто: {teachers}"
                 text += "\n"
         else:
             text += f"Нет пар\n"
         text += "\n"
         date += datetime.timedelta(days=1)
     return text
-

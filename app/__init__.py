@@ -9,5 +9,5 @@ db = SQLAlchemy(app)
 from app import models
 from app.workers import *
 
-# db.drop_all()
+db.drop_all()
 db.create_all()

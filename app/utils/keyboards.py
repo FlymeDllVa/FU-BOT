@@ -3,7 +3,7 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
-
+from config import *
 
 class Keyboards:
 
@@ -30,6 +30,8 @@ class Keyboards:
         keyboard.add_button('Да', color=VkKeyboardColor.POSITIVE)
         keyboard.add_line()
         keyboard.add_button('Нет', color=VkKeyboardColor.NEGATIVE)
+        keyboard.add_line()
+        keyboard.add_vkapps_button(app_id=5748831, owner_id=-int(GROUP_ID), label="Рассылка", hash="sendKeyboard")
 
         return keyboard.get_keyboard()
 
@@ -147,35 +149,26 @@ class Keyboards:
 
         return keyboard.get_keyboard()
 
-    # def find_teacher_menu(self, user):
-    #     keyboard = VkKeyboard()
-    #
-    #     keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE)
-    #     keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_line()
-    #
-    #     keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_line()
-    #
-    #     keyboard.add_button('Назад к меню', color=VkKeyboardColor.PRIMARY)
-    #
-    #     return keyboard.get_keyboard()
+    @classmethod
+    def find_teacher_menu(self, user):
+        """
+        Возвращает клавиатуру для выбора даты
+        :param user:
+        :return:
+        """
 
-    #
-    # def subscribe_to_schedule_day_menu(self, user):
-    #
-    #     keyboard = VkKeyboard()
-    #
-    #     keyboard.add_button('Текущий день', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_button('Следующий день', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_line()
-    #     keyboard.add_button('Текущий и следующий день', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_line()
-    #     keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT)
-    #     keyboard.add_line()
-    #
-    #     keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY)
-    #
-    #     return keyboard.get_keyboard()
+        keyboard = VkKeyboard()
+
+        keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE)
+        keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_line()
+        keyboard.add_button('Сегодня и завтра', color=VkKeyboardColor.POSITIVE)
+        keyboard.add_line()
+        keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_line()
+        keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_line()
+
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY)
+
+        return keyboard.get_keyboard()
