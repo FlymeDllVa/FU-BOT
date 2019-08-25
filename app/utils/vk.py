@@ -340,6 +340,7 @@ class Bot:
 
         schedule = format_schedule(start_day=start_day, days=days, teacher=dict(id=user.found_teacher_id,
                                                                                 name=user.found_teacher_name))
+        User.update_user(user=user, data=dict(found_teacher_id=None, found_teacher_name=None))
         if schedule is None:
             self.vk.messages.send(
                 peer_id=user.id,
