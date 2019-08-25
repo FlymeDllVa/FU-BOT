@@ -1,13 +1,13 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from config import Flask_Config
+from config import Config
 
 app = Flask(__name__)
-app.config.from_object(Flask_Config)
+app.config.from_object(Config)
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 
-from app import routes, models
-from app.models import Users, Groups, Schedule, ScheduleObject
-from app.vk.runner import *
+from app import models
+from app.workers import *
+
+# db.drop_all()
+db.create_all()
