@@ -1,18 +1,19 @@
-from app import db
+from app import db, session
+from sqlalchemy import Integer, String, Column
 
 
-class User(db.Model):
+class User(db):
     __tablename__ = "users"
 
-    id = db.Column(db.Integer, primary_key=True, index=True, unique=True)
-    update = db.Column(db.String, default="1.0")
-    position = db.Column(db.String, default="START")
-    group_name = db.Column(db.String, default=None)
-    found_teacher_id = db.Column(db.Integer, default=None)
-    found_teacher_name = db.Column(db.String, default=None)
-    subscription_time = db.Column(db.String, default=None)
-    subscription_days = db.Column(db.String, default=None)
-    subscription_group = db.Column(db.String, default=None)
+    id = Column(Integer, primary_key=True, index=True, unique=True)
+    update = Column(String, default="1.0")
+    position = Column(String, default="START")
+    group_name = Column(String, default=None)
+    found_teacher_id = Column(Integer, default=None)
+    found_teacher_name = Column(String, default=None)
+    subscription_time = Column(String, default=None)
+    subscription_days = Column(String, default=None)
+    subscription_group = Column(String, default=None)
 
     @classmethod
     def filter_by_time(cls, time):
@@ -23,10 +24,10 @@ class User(db.Model):
         :return:
         """
 
-        return cls.query.filter_by(subscription_time=time).all()
+        return session.query(cls).filter_by(subscription_time=time).all()
 
     @classmethod
-    def search_user(cls, id):
+    def search_user(cls, id: int) -> 'User':
         """
         Ищет пользователя в базе по id
 
@@ -34,16 +35,16 @@ class User(db.Model):
         :return:
         """
 
-        user = cls.query.filter_by(id=id).first()
+        user = session.query(cls).filter_by(id=id).first()
         if user:
             return user
         user = cls(id=id)
-        db.session.add(user)
-        db.session.commit()
+        session.add(user)
+        session.commit()
         return user
 
     @classmethod
-    def change_position(cls, user, position):
+    def change_position(cls, user: 'User', position: str) -> 'User':
         """
         Изменяет расположения человека в меню в базе
 
@@ -53,11 +54,11 @@ class User(db.Model):
         """
 
         user.position = position
-        db.session.commit()
+        session.commit()
         return user
 
     @classmethod
-    def change_group_name(cls, user, group_name):
+    def change_group_name(cls, user: 'User', group_name: str) -> 'User':
         """
         Изменяет название группы человека в базе
 
@@ -67,11 +68,11 @@ class User(db.Model):
         """
 
         user.group_name = group_name
-        db.session.commit()
+        session.commit()
         return user
 
     @classmethod
-    def update_user(cls, user, **data):
+    def update_user(cls, user: 'User', **data) -> 'User':
         """
         Обновляет поля пользователя поданные как kwargs
 
@@ -83,6 +84,5 @@ class User(db.Model):
         for key, value in data['data'].items():
             if hasattr(user, key):
                 setattr(user, key, value)
-        db.session.commit()
+        session.commit()
         return user
-

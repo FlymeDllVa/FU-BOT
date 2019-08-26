@@ -3,12 +3,13 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.utils import get_random_id
+from app.models import User
 from config import *
 
-class Keyboards:
 
+class Keyboards:
     @classmethod
-    def empty_keyboard(cls):
+    def empty_keyboard(cls) -> str:
         """
         Возвращает пустую клавиатуру
 
@@ -36,7 +37,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @classmethod
-    def main_menu(cls, user):
+    def main_menu(cls, user: User) -> str:
         """
         Возвращает клавиатуру главного меню
 
@@ -66,7 +67,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @classmethod
-    def settings_menu(cls, user):
+    def settings_menu(cls, user: User) -> str:
         """
         Возвращает клавиатуру настроек
 
@@ -99,7 +100,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @classmethod
-    def subscribe_to_schedule_start_menu(cls, user):
+    def subscribe_to_schedule_start_menu(cls, user: User) -> str:
         """
         Возвращает клавиатуру подписки на расписание
 
@@ -126,7 +127,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @classmethod
-    def subscribe_to_schedule_day_menu(cls, user):
+    def subscribe_to_schedule_day_menu(cls, user: User) -> str:
         """
         Возвращает клавиатуру для выбора дня рассылки
 
@@ -150,7 +151,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @classmethod
-    def find_teacher_menu(self, user):
+    def find_teacher_menu(cls, user: User) -> str:
         """
         Возвращает клавиатуру для выбора даты
         :param user:

@@ -11,7 +11,6 @@ from app.models import User
 
 class Bot:
     """
-
     Конструкторуирует бота
 
     """
@@ -33,7 +32,7 @@ class Bot:
     Методы первой настройки настройка
     """
 
-    def start_menu(self, user) -> User:
+    def start_menu(self, user: User) -> User:
         """
         Отправляет пользователю стартовое меню
 
@@ -50,7 +49,7 @@ class Bot:
         )
         return user
 
-    def error_data(self, user, message: str = "Пожайлуста, выберите пункт из меню") -> User:
+    def error_data(self, user: User, message: str = "Пожайлуста, выберите пункт из меню") -> User:
         """
         В случае ошибки введенных данных просит повторить
 
@@ -70,7 +69,7 @@ class Bot:
     Методы главного меню
     """
 
-    def main_menu(self, user, message: str = "Выберите интересующий пункт в меню") -> User:
+    def main_menu(self, user: User, message: str = "Выберите интересующий пункт в меню") -> User:
         """
         Отправляет пользователю главное меню
 
@@ -98,7 +97,7 @@ class Bot:
     Методы поиска группы
     """
 
-    def choice_group(self, user) -> User:
+    def choice_group(self, user: User) -> User:
         """
         Отправляет пользователю сообщение о том, что для смены группы трубется ее написать
 
@@ -114,7 +113,7 @@ class Bot:
         )
         return user
 
-    def check_group(self, user, group_name: str) -> User or None:
+    def check_group(self, user: User, group_name: str) -> User or None:
         """
         Проверяет существует ли группа
 
@@ -129,7 +128,7 @@ class Bot:
         else:
             return User.change_group_name(user, group_name)
 
-    def change_group(self, user, change: bool = False) -> User:
+    def change_group(self, user: User, change: bool = False) -> User:
         """
         Отправляет сообщение о успешной смене группы
 
@@ -157,7 +156,7 @@ class Bot:
     Методы расписания
     """
 
-    def send_schedule(self, user, start_day: int = 0, days: int = 1) -> User or None:
+    def send_schedule(self, user: User, start_day: int = 0, days: int = 1) -> User or None:
         """
         Отсылает пользователю расписание
 
@@ -185,7 +184,7 @@ class Bot:
         )
         return user
 
-    def settings(self, user) -> User:
+    def settings(self, user: User) -> User:
         """
         Отсылает пользователю меню настроек
 
@@ -205,7 +204,7 @@ class Bot:
     Подписка на расписание
     """
 
-    def subscribe_error(self, user) -> User:
+    def subscribe_error(self, user: User) -> User:
         user = User.update_user(user=user,
                                 data=dict(subscription_time=None, subscription_group=None, subscription_days=None))
         self.vk.messages.send(
@@ -215,7 +214,7 @@ class Bot:
         )
         return user
 
-    def subscribe_schedule(self, user) -> User:
+    def subscribe_schedule(self, user: User) -> User:
         """
         Отправляет время для подписки на расписание
 
@@ -231,7 +230,7 @@ class Bot:
         )
         return user
 
-    def update_subscribe_time(self, user, time) -> User or None:
+    def update_subscribe_time(self, user: User, time: str) -> User or None:
         """
         Обновляет время для подписки на расписание
 
@@ -247,7 +246,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=f"Формируем расписания для группы {user.group_name} в {time}\nВыберите период, на который вы "
-                        f"хотите получать расписание",
+                f"хотите получать расписание",
                 keyboard=self.keyboard.subscribe_to_schedule_day_menu(user)
             )
             return user
@@ -255,7 +254,7 @@ class Bot:
             self.subscribe_error(user)
             return None
 
-    def update_subscribe_day(self, user, day) -> User or None:
+    def update_subscribe_day(self, user: User, day: str) -> User or None:
         """
         Отправляет день для подписки на расписание
 
@@ -285,7 +284,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=f'Вы подписались на раписание группы {user.subscription_group}\nТеперь каждый день вы будете '
-                        f'получать расписание в {user.subscription_time} на {day}',
+                f'получать расписание в {user.subscription_time} на {day}',
             )
         return user
 
@@ -293,7 +292,7 @@ class Bot:
     Поиск преподавателя
     """
 
-    def search_teacher(self, user):
+    def search_teacher(self, user: User) -> User:
         """
         Отправляет сообщение с просьбой ввести ФИО преподавателя
 
@@ -308,7 +307,7 @@ class Bot:
         )
         return user
 
-    def search_teacher_schedule(self, user, teacher_name):
+    def search_teacher_schedule(self, user: User, teacher_name: str) -> User or None:
         teacher = get_teacher(teacher_name)
         if isinstance(teacher, dict):
             User.update_user(user=user, data=dict(found_teacher_id=teacher['id'], found_teacher_name=teacher['name']))
@@ -328,7 +327,7 @@ class Bot:
             )
             return None
 
-    def send_teacher_schedule(self, user, start_day: int = 0, days: int = 1) -> User or None:
+    def send_teacher_schedule(self, user: User, start_day: int = 0, days: int = 1) -> User or None:
         """
         Отсылает пользователю расписание преподавателя
 
