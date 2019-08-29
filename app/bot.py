@@ -1,3 +1,4 @@
+import json
 import threading
 import json
 
@@ -47,30 +48,14 @@ def vk_bot_from_user(bot, event):
             bot.send_main_menu(user)
         elif menu == "schedule":
             bot.send_schedule_menu(user)
-        elif menu == "schedule_today":
-            bot.send_schedule(user, days=1)
-        elif menu == "schedule_tomorrow":
-            bot.send_schedule(user, start_day=1, days=1)
-        elif menu == "schedule_today_and_tomorrow":
-            bot.send_schedule(user, days=2)
-        elif menu == "schedule_this_week":
-            bot.send_schedule(user, days=7)
-        elif menu == "schedule_next_week":
-            bot.send_schedule(user, start_day=7, days=7)
+        elif menu == "schedule_show":
+            bot.send_schedule(user, start_day=payload["start_day"], days=payload["days"])
         elif menu == "search_teacher":
             bot.send_search_teacher(user)
         elif menu == "teachers":
             bot.send_teacher(user, payload)
-        elif menu == "teacher_schedule_today":
-            bot.send_teacher_schedule(user, days=1)
-        elif menu == "teacher_schedule_tomorrow":
-            bot.send_teacher_schedule(user, start_day=1, days=1)
-        elif menu == "teacher_schedule_today_and_tomorrow":
-            bot.send_teacher_schedule(user, days=2)
-        elif menu == "teacher_schedule_this_week":
-            bot.send_teacher_schedule(user, days=7)
-        elif menu == "teacher_schedule_next_week":
-            bot.send_teacher_schedule(user, start_day=7, days=7)
+        elif menu == "teacher_schedule_show":
+            bot.send_teacher_schedule(user, start_day=payload["start_day"], days=payload["days"])
         elif menu == "settings":
             bot.send_settings_menu(user)
         elif menu == "change_group":
@@ -91,6 +76,9 @@ def vk_bot_from_user(bot, event):
             bot.search_teacher_schedule(user, message_lower)
         if user.subscription_days == "CHANGES":
             bot.update_subscribe_time(user, message_lower)
+
+        else:
+            bot.send_main_menu(user)
 
 
 def vk_bot_from_chat(bot, event):

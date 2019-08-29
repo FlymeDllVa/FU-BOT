@@ -52,17 +52,20 @@ class Keyboards:
             keyboard.add_button('Выбрать группу', color=VkKeyboardColor.DEFAULT, payload={"menu": "change_group"})
             keyboard.add_line()
         else:
-            keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE, payload={"menu": "schedule_today"})
-            keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT, payload={"menu": "schedule_tomorrow"})
+            keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE,
+                                payload={"menu": "schedule_show", "start_day": 0, "days": 1})
+            keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT,
+                                payload={"menu": "schedule_show", "start_day": 1, "days": 1})
             keyboard.add_line()
 
             keyboard.add_button('Сегодня и завтра', color=VkKeyboardColor.DEFAULT,
-                                payload={"menu": "schedule_today_and_tomorrow"})
+                                payload={"menu": "schedule_show", "start_day": 0, "days": 2})
             keyboard.add_line()
 
-            keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT, payload={"menu": "schedule_this_week"})
+            keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT,
+                                payload={"menu": "schedule_show", "start_day": 0, "days": 7})
             keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT,
-                                payload={"menu": "schedule_next_week"})
+                                payload={"menu": "schedule_show", "start_day": 7, "days": 7})
             keyboard.add_line()
 
         keyboard.add_button('Поиск преподавателя', color=VkKeyboardColor.DEFAULT, payload={"menu": "search_teacher"})
@@ -194,22 +197,20 @@ class Keyboards:
         """
 
         keyboard = VkKeyboard()
-
-        keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE, payload={"menu": "teacher_schedule_today"})
-        keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT, payload={"menu": "teacher_schedule_tomorrow"})
+        keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE,
+                            payload={"menu": "teacher_schedule_show", "start_day": 0, "days": 1})
+        keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "teacher_schedule_show", "start_day": 1, "days": 1})
         keyboard.add_line()
 
-        keyboard.add_button('Сегодня и завтра',
-                            color=VkKeyboardColor.DEFAULT,
-                            payload={"menu": "teacher_schedule_today_and_tomorrow"})
+        keyboard.add_button('Сегодня и завтра', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "teacher_schedule_show", "start_day": 0, "days": 2})
         keyboard.add_line()
 
-        keyboard.add_button('Эта неделя',
-                            color=VkKeyboardColor.DEFAULT,
-                            payload={"menu": "teacher_schedule_this_week"})
-        keyboard.add_button('Следующая неделя',
-                            color=VkKeyboardColor.DEFAULT,
-                            payload={"menu": "teacher_schedule_next_week"})
+        keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "teacher_schedule_show", "start_day": 0, "days": 7})
+        keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "teacher_schedule_show", "start_day": 7, "days": 7})
         keyboard.add_line()
 
         keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY,
