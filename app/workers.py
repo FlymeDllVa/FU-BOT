@@ -34,16 +34,17 @@ def schedule_distribution(bot):
     """
 
     for user in User.filter_by_time(time.strftime("%H:%M", time.localtime())):
-        if user.subscription_days == "ТЕКУЩИЙ":
-            bot.send_schedule(user, days=1)
-        elif user.subscription_days == "СЛЕДУЮЩИЙ":
-            bot.send_schedule(user, start_day=1, days=1)
-        elif user.subscription_days == "ТЕКУЩИЙ_И_СЛЕДУЮЩИЙ":
-            bot.send_schedule(user, days=2)
-        elif user.subscription_days == "ТЕКУЩАЯ_НЕДЕЛЯ":
-            bot.send_schedule(user, days=7)
-        elif user.subscription_days == "СЛЕДУЮЩАЯ_НЕДЕЛЯ":
-            bot.send_schedule(user, start_day=7, days=7)
+        if user.subscription_days is not None and user.subscription_days != "CHANGES":
+            if user.subscription_days == "today":
+                bot.send_schedule(user, days=1)
+            elif user.subscription_days == "tomorrow":
+                bot.send_schedule(user, start_day=1, days=1)
+            elif user.subscription_days == "today_and_tomorrow":
+                bot.send_schedule(user, days=2)
+            elif user.subscription_days == "this_week":
+                bot.send_schedule(user, days=7)
+            elif user.subscription_days == "next_week":
+                bot.send_schedule(user, start_day=7, days=7)
 
 
 def start_workers():

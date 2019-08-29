@@ -39,6 +39,29 @@ def format_name(lesson: list):
     return ', '.join(names)
 
 
+def get_group(group_name: str) -> str or dict:
+    """
+    Запрашивает группу у сервера
+
+    :param group_name:
+    :return:
+    """
+
+    session = requests.session()
+    request = session.post(f"{SERVER_URL}api/v1/group", json={"group_name": group_name}, timeout=2)
+    if not request.status_code == 200:
+        return None
+    if request.status_code == 523:
+        return "fa_error"
+    if request.status_code == 500:
+        return None
+    request_json = request.json()
+    if "group_update" in request_json:
+        return request_json
+    else:
+        return "fa_error"
+
+
 def get_schedule(group_name: str) -> dict or None:
     """
     Запрашивает расписание у сервера
@@ -63,7 +86,7 @@ def get_teacher_schedule(teacher: dict):
     """
     session = requests.session()
     request = session.post(f"{SERVER_URL}api/v1/schedule/teacher",
-                           json={"id": teacher['id'], "name": teacher['name']}, timeout=2)
+                           json={"id": teacher['id'], "name": teacher['name']}, timeout=5)
     if not request.status_code == 200:
         return None
     return request.json()
@@ -78,12 +101,16 @@ def get_teacher(teacher_name: str) -> dict or None:
     """
 
     session = requests.session()
-    request = session.post(f"{SERVER_URL}api/v1/teacher", json={"name": teacher_name}, timeout=2)
+    try:
+        request = session.post(f"{SERVER_URL}api/v1/teacher", json={"name": teacher_name}, timeout=5)
+    except requests.exceptions.ReadTimeout:
+        return "timeout"
     if not request.status_code == 200:
         return None
     request = request.json()
-    if len(request) > 0:
-        return dict(id=request[0][0], name=request[0][1])
+    if request is not None:
+        if len(request) > 0:
+            return request
     return None
 
 

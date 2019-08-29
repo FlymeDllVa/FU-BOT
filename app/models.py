@@ -7,7 +7,6 @@ class User(db):
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
     update = Column(String, default="1.0")
-    position = Column(String, default="START")
     group_name = Column(String, default=None)
     found_teacher_id = Column(Integer, default=None)
     found_teacher_name = Column(String, default=None)
@@ -40,34 +39,6 @@ class User(db):
             return user
         user = cls(id=id)
         session.add(user)
-        session.commit()
-        return user
-
-    @classmethod
-    def change_position(cls, user: 'User', position: str) -> 'User':
-        """
-        Изменяет расположения человека в меню в базе
-
-        :param user:
-        :param position:
-        :return:
-        """
-
-        user.position = position
-        session.commit()
-        return user
-
-    @classmethod
-    def change_group_name(cls, user: 'User', group_name: str) -> 'User':
-        """
-        Изменяет название группы человека в базе
-
-        :param user:
-        :param group_name:
-        :return:
-        """
-
-        user.group_name = group_name
         session.commit()
         return user
 

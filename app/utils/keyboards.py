@@ -19,25 +19,26 @@ class Keyboards:
         return VkKeyboard().get_empty_keyboard()
 
     @classmethod
-    def start_menu(cls):
+    def main_menu(cls):
         """
-        Возвращает клавиатуру стартового меню
+        Возвращает главное меню
 
         :return:
         """
 
         keyboard = VkKeyboard()
 
-        keyboard.add_button('Да', color=VkKeyboardColor.POSITIVE)
+        keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT, payload={"menu": "schedule"})
         keyboard.add_line()
-        keyboard.add_button('Нет', color=VkKeyboardColor.NEGATIVE)
+        keyboard.add_vkapps_button(label="Мероприятия", app_id=6216857, owner_id=-int(GROUP_ID), hash="send_events")
         keyboard.add_line()
-        keyboard.add_vkapps_button(app_id=5748831, owner_id=-int(GROUP_ID), label="Рассылка", hash="sendKeyboard")
+        keyboard.add_vkapps_button(label="Рассылка событий", app_id=5748831, owner_id=-int(GROUP_ID),
+                                   hash="send_distributions")
 
         return keyboard.get_keyboard()
 
     @classmethod
-    def main_menu(cls, user: User) -> str:
+    def schedule_menu(cls, user: User) -> str:
         """
         Возвращает клавиатуру главного меню
 
@@ -47,22 +48,28 @@ class Keyboards:
 
         keyboard = VkKeyboard()
 
-        if user.group_name is None:
-            keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT)
+        if user.group_name is None or user.group_name == "CHANGES":
+            keyboard.add_button('Выбрать группу', color=VkKeyboardColor.DEFAULT, payload={"menu": "change_group"})
             keyboard.add_line()
         else:
-            keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE)
-            keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE, payload={"menu": "schedule_today"})
+            keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT, payload={"menu": "schedule_tomorrow"})
             keyboard.add_line()
 
-            keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT)
-            keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('Сегодня и завтра', color=VkKeyboardColor.DEFAULT,
+                                payload={"menu": "schedule_today_and_tomorrow"})
             keyboard.add_line()
 
-        keyboard.add_button('Поиск преподавателя', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT, payload={"menu": "schedule_this_week"})
+            keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT,
+                                payload={"menu": "schedule_next_week"})
+            keyboard.add_line()
+
+        keyboard.add_button('Поиск преподавателя', color=VkKeyboardColor.DEFAULT, payload={"menu": "search_teacher"})
         keyboard.add_line()
 
-        keyboard.add_button('Настройки', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('← Назад', color=VkKeyboardColor.PRIMARY, payload={"menu": "main"})
+        keyboard.add_button('≡ Настройки', color=VkKeyboardColor.DEFAULT, payload={"menu": "settings"})
 
         return keyboard.get_keyboard()
 
@@ -78,24 +85,27 @@ class Keyboards:
         keyboard = VkKeyboard()
 
         if user.group_name is None:
-            keyboard.add_button('Выбрать группу', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('Выбрать группу', color=VkKeyboardColor.DEFAULT, payload={"menu": "change_group"})
             keyboard.add_line()
         else:
-            keyboard.add_button('Изменить группу', color=VkKeyboardColor.DEFAULT)
+            keyboard.add_button('Изменить группу', color=VkKeyboardColor.DEFAULT, payload={"menu": "change_group"})
             keyboard.add_line()
 
-        if user.subscription_days is None and user.group_name:
-            keyboard.add_button('Подписаться на расписание', color=VkKeyboardColor.DEFAULT)
+        if (user.subscription_days is None or user.subscription_days == "CHANGES") and user.group_name:
+            keyboard.add_button('Подписаться на расписание', color=VkKeyboardColor.DEFAULT,
+                                payload={"menu": "subscribe_to_newsletter"})
             keyboard.add_line()
         else:
-            if user.subscription_days:
+            if user.subscription_days is not None and user.subscription_days != "CHANGES" and user.group_name:
                 if user.group_name:
-                    keyboard.add_button('Изменить подписку на расписание', color=VkKeyboardColor.DEFAULT)
+                    keyboard.add_button('Изменить подписку на расписание', color=VkKeyboardColor.DEFAULT,
+                                        payload={"menu": "subscribe_to_newsletter"})
                     keyboard.add_line()
-                keyboard.add_button('Отписаться от подписки на расписание', color=VkKeyboardColor.DEFAULT)
+                keyboard.add_button('Отписаться от подписки на расписание', color=VkKeyboardColor.DEFAULT,
+                                    payload={"menu": "unsubscribe_to_newsletter"})
                 keyboard.add_line()
 
-        keyboard.add_button('◀️ Назад', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('← Назад', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
 
         return keyboard.get_keyboard()
 
@@ -122,7 +132,7 @@ class Keyboards:
         keyboard.add_button('22:00', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
 
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
 
         return keyboard.get_keyboard()
 
@@ -136,17 +146,42 @@ class Keyboards:
         """
         keyboard = VkKeyboard()
 
-        keyboard.add_button('Текущий день', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Текущий день', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "subscribe_to_newsletter_today"})
         keyboard.add_line()
-        keyboard.add_button('Следующий день', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Следующий день', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "subscribe_to_newsletter_tomorrow"})
         keyboard.add_line()
-        keyboard.add_button('Текущий и следующий день', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Текущий и следующий день', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "subscribe_to_newsletter_today_and_tomorrow"})
         keyboard.add_line()
-        keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "subscribe_to_newsletter_this_week"})
         keyboard.add_line()
-        keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "subscribe_to_newsletter_next_week"})
         keyboard.add_line()
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
+
+        return keyboard.get_keyboard()
+
+    @classmethod
+    def teachers_menu(cls, teachers: list) -> str:
+        """
+        Возвращает клавиатуру для выбора преподавателя
+
+        :param teachers:
+        :return:
+        """
+
+        keyboard = VkKeyboard()
+
+        for teacher in teachers[:9]:
+            keyboard.add_button(teacher[1], color=VkKeyboardColor.DEFAULT, payload={"menu": "teachers",
+                                                                                    "found_teacher_id": teacher[0],
+                                                                                    "found_teacher_name": teacher[1]})
+            keyboard.add_line()
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
 
         return keyboard.get_keyboard()
 
@@ -160,16 +195,24 @@ class Keyboards:
 
         keyboard = VkKeyboard()
 
-        keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE)
-        keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_line()
-        keyboard.add_button('Сегодня и завтра', color=VkKeyboardColor.POSITIVE)
-        keyboard.add_line()
-        keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT)
-        keyboard.add_line()
-        keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT)
+        keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE, payload={"menu": "teacher_schedule_today"})
+        keyboard.add_button('Завтра', color=VkKeyboardColor.DEFAULT, payload={"menu": "teacher_schedule_tomorrow"})
         keyboard.add_line()
 
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button('Сегодня и завтра',
+                            color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "teacher_schedule_today_and_tomorrow"})
+        keyboard.add_line()
+
+        keyboard.add_button('Эта неделя',
+                            color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "teacher_schedule_this_week"})
+        keyboard.add_button('Следующая неделя',
+                            color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "teacher_schedule_next_week"})
+        keyboard.add_line()
+
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY,
+                            payload={"menu": "schedule"})
 
         return keyboard.get_keyboard()

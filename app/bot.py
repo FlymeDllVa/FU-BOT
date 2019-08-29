@@ -1,4 +1,5 @@
 import threading
+import json
 
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from app.models import User
@@ -32,105 +33,64 @@ def vk_bot_from_user(bot, event):
     :return:
     """
 
+    user = User.search_user(event.obj.peer_id)
+    payload = json.loads(getattr(event.obj, 'payload', '{}')) if 'payload' in event.obj else {}
     message = event.obj.text
     message_lower = message.lower()
-    user = User.search_user(event.obj.peer_id)
 
-    if message_lower == ("начать" or "start" or "сброс") or user.position == "START":
-        bot.start_menu(User.change_position(user, "START_GROUP"))
+    if message_lower == ("начать" or "start" or "сброс"):
+        bot.send_main_menu(user)
 
-    # Стартовое меню
-    elif user.position == "START_GROUP":
-        if message_lower == "да":
-            bot.choice_group(User.change_position(user, "GROUP_CHOICE"))
-        elif message_lower == "нет":
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
-        else:
-            bot.error_data(user)
-
-    # Главное меню
-    elif user.position == "MAIN_MENU":
-        if message_lower == "расписание":
-            bot.choice_group(User.change_position(user, "GROUP_CHOICE"))
-        elif message_lower == "сегодня":
+    elif "menu" in payload:
+        menu = payload["menu"]
+        if menu == "main":
+            bot.send_main_menu(user)
+        elif menu == "schedule":
+            bot.send_schedule_menu(user)
+        elif menu == "schedule_today":
             bot.send_schedule(user, days=1)
-        elif message_lower == "завтра":
+        elif menu == "schedule_tomorrow":
             bot.send_schedule(user, start_day=1, days=1)
-        elif message_lower == "эта неделя":
+        elif menu == "schedule_today_and_tomorrow":
+            bot.send_schedule(user, days=2)
+        elif menu == "schedule_this_week":
             bot.send_schedule(user, days=7)
-        elif message_lower == "следующая неделя":
+        elif menu == "schedule_next_week":
             bot.send_schedule(user, start_day=7, days=7)
-        elif message_lower == "поиск преподавателя":
-            bot.search_teacher(User.change_position(user, "SEARCH_TEACHER_NAME"))
-        elif message_lower == "настройки":
-            bot.settings(User.change_position(user, "SETTINGS"))
-        else:
-            bot.main_menu(user=user, message="Пожайлуста, выберите пункт из меню")
+        elif menu == "search_teacher":
+            bot.send_search_teacher(user)
+        elif menu == "teachers":
+            bot.send_teacher(user, payload)
+        elif menu == "teacher_schedule_today":
+            bot.send_teacher_schedule(user, days=1)
+        elif menu == "teacher_schedule_tomorrow":
+            bot.send_teacher_schedule(user, start_day=1, days=1)
+        elif menu == "teacher_schedule_today_and_tomorrow":
+            bot.send_teacher_schedule(user, days=2)
+        elif menu == "teacher_schedule_this_week":
+            bot.send_teacher_schedule(user, days=7)
+        elif menu == "teacher_schedule_next_week":
+            bot.send_teacher_schedule(user, start_day=7, days=7)
+        elif menu == "settings":
+            bot.send_settings_menu(user)
+        elif menu == "change_group":
+            bot.send_choice_group(user)
+        elif menu == "subscribe_to_newsletter":
+            bot.subscribe_schedule(user)
+        elif menu == "unsubscribe_to_newsletter":
+            bot.unsubscribe_schedule(user)
+        elif menu in ("subscribe_to_newsletter_today", "subscribe_to_newsletter_tomorrow",
+                      "subscribe_to_newsletter_today_and_tomorrow", "subscribe_to_newsletter_this_week",
+                      "subscribe_to_newsletter_next_week"):
+            bot.update_subscribe_day(user, menu)
 
-    # Смена группы
-    elif user.position == "GROUP_CHOICE":
-        db_user = bot.check_group(user, message)
-        if db_user:
-            user = bot.change_group(db_user, True)
-        else:
-            user = bot.change_group(user, False)
-        user = User.change_position(user, "MAIN_MENU")
-        bot.main_menu(user=user)
-
-    # Настройки
-    elif user.position == "SETTINGS":
-        if message_lower in ("изменить группу", "выбрать группу"):
-            bot.choice_group(User.change_position(user, "GROUP_CHOICE"))
-        elif message_lower in ("подписаться на расписание", "изменить подписку на расписание"):
-            bot.subscribe_schedule(User.change_position(user, "SUBSCRIBE_TIME"))
-        elif message_lower == "отписаться от подписки на расписание":
-            bot.main_menu(User.change_position(bot.subscribe_error(user), "MAIN_MENU"))
-        elif message_lower in ("назад", "◀️ назад"):
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
-
-    # Подписка на расписание
-    elif user.position == "SUBSCRIBE_TIME":
-        if message_lower in ("отмена", "меню", "назад", "◀️ назад"):
-            user = bot.subscribe_error(user)
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
-        else:
-            if bot.update_subscribe_time(user, message_lower):
-                User.change_position(user, "SUBSCRIBE_DAY")
-            else:
-                bot.subscribe_schedule(bot.error_data(user, message="Напишите время или выберите из меню"))
-
-    elif user.position == "SUBSCRIBE_DAY":
-        if message_lower in ("отмена", "меню", "назад", "◀️ назад"):
-            user = bot.subscribe_error(user)
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
-        if bot.update_subscribe_day(user, message_lower):
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
-        else:
-            bot.error_data(user, message="Выберите промежуток в меню")
-
-    # Поиск препода
-    elif user.position == "SEARCH_TEACHER_NAME":
-        teacher = bot.search_teacher_schedule(user, message_lower)
-        if teacher is None:
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
-        else:
-            User.change_position(user, "SEARCH_TEACHER_DAY")
-
-    elif user.position == "SEARCH_TEACHER_DAY":
-        if message_lower in ("сегодня", "завтра", "сегодня и завтра", "эта неделя", "следующая неделя"):
-            if message_lower == "сегодня":
-                bot.send_teacher_schedule(user, days=1)
-            elif message_lower == "завтра":
-                bot.send_teacher_schedule(user, start_day=1, days=1)
-            elif message_lower == "сегодня и завтра":
-                bot.send_teacher_schedule(user, days=2)
-            elif message_lower == "эта неделя":
-                bot.send_teacher_schedule(user, days=7)
-            elif message_lower == "следующая неделя":
-                bot.send_teacher_schedule(user, start_day=7, days=7)
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
-        elif message_lower == "отмена":
-            bot.main_menu(User.change_position(user, "MAIN_MENU"))
+    elif "menu" not in payload:
+        if user.group_name == "CHANGES":
+            bot.send_check_group(user, message_lower)
+        if user.found_teacher_name == "CHANGES" and user.found_teacher_id == "CHANGES":
+            bot.search_teacher_schedule(user, message_lower)
+        if user.subscription_days == "CHANGES":
+            bot.update_subscribe_time(user, message_lower)
 
 
 def vk_bot_from_chat(bot, event):
