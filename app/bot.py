@@ -50,6 +50,8 @@ def vk_bot_from_user(bot, event):
             bot.send_schedule_menu(user)
         elif menu == "schedule_show":
             bot.send_schedule(user, start_day=payload["start_day"], days=payload["days"])
+        elif menu == "schedule_one_day":
+            bot.send_one_day_schedule(user)
         elif menu == "search_teacher":
             bot.send_search_teacher(user)
         elif menu == "teachers":
@@ -58,6 +60,8 @@ def vk_bot_from_user(bot, event):
             bot.send_teacher_schedule(user, start_day=payload["start_day"], days=payload["days"])
         elif menu == "settings":
             bot.send_settings_menu(user)
+        elif menu == "show_groups" or menu == "show_location":
+            bot.show_groups_or_location(user, payload["menu"])
         elif menu == "change_group":
             bot.send_choice_group(user)
         elif menu == "subscribe_to_newsletter":
@@ -68,7 +72,6 @@ def vk_bot_from_user(bot, event):
                       "subscribe_to_newsletter_today_and_tomorrow", "subscribe_to_newsletter_this_week",
                       "subscribe_to_newsletter_next_week"):
             bot.update_subscribe_day(user, menu)
-
     elif "menu" not in payload:
         if user.group_name == "CHANGES":
             bot.send_check_group(user, message_lower)
@@ -76,9 +79,10 @@ def vk_bot_from_user(bot, event):
             bot.search_teacher_schedule(user, message_lower)
         if user.subscription_days == "CHANGES":
             bot.update_subscribe_time(user, message_lower)
-
-        else:
-            bot.send_main_menu(user)
+        if user.schedule_day_date == "CHANGES":
+            bot.send_day_schedule(user, message_lower)
+        # else:
+        #     bot.send_main_menu(user)
 
 
 def vk_bot_from_chat(bot, event):

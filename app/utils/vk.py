@@ -80,7 +80,7 @@ class Bot:
         :return:
         """
 
-        schedule = format_schedule(group_name=user.group_name, start_day=start_day, days=days)
+        schedule = format_schedule(user, start_day=start_day, days=days)
         if schedule is None:
             self.vk.messages.send(
                 peer_id=user.id,
@@ -92,6 +92,60 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=schedule,
+        )
+        return user
+
+    def send_one_day_schedule(self, user: User) -> User:
+        """
+        Отправляет пользователю предложение написать дату
+
+        :param user:
+        :return:
+        """
+
+        user = User.update_user(user, data=dict(schedule_day_date="CHANGES"))
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message="Напишите дату, что бы получить ее расписание\n\nНапример «01.10.2019»",
+            keyboard=self.keyboard.empty_keyboard()
+        )
+        return user
+
+    def send_day_schedule(self, user: User, date) -> User:
+        """
+        Отправляет расписание на 1 день
+
+        :param user:
+        :param date:
+        :return:
+        """
+
+        user = User.update_user(user, data=dict(schedule_day_date=None))
+        try:
+            date = datetime.datetime.strptime(date, '%d.%m.%Y')
+        except ValueError:
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message=f"Неправильная дата",
+                keyboard=self.keyboard.schedule_menu(user)
+            )
+            return user
+        schedule = format_schedule(user=user, date=date)
+        if schedule is None:
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message=f"Не удалось найти расписание на {date}",
+                keyboard=self.keyboard.schedule_menu(user)
+            )
+            return user
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message=schedule,
+            keyboard=self.keyboard.schedule_menu(user)
         )
         return user
 
@@ -124,20 +178,54 @@ class Bot:
         """
 
         group_name = group_name.strip().replace(" ", "").upper()
-        schedule = get_group(group_name)
+        group = get_group(group_name)
 
-        if isinstance(schedule, dict):
-            if schedule["group_update"] is None:
-                user = User.update_user(user, data=dict(group_name=schedule["group_name"]))
+        if group.has_error:
+            if group.error_text == "Timeout error":
+                group = get_group(group_name)
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
-                    message=f"Группа не существует",
+                    message=f"Ищем расписание группы «{group_name}»",
+                )
+            elif group.error_text == "Connection error":
+                user = User.update_user(user, data=dict(group_name=None))
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message="Информационно образовательного портал не доступен. Попробуйте позже",
+                    keyboard=self.keyboard.schedule_menu(user)
+                )
+            elif group.error_text == "Not found":
+                user = User.update_user(user, data=dict(group_name=None))
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=f"Группа «{group_name}» не существует",
                     keyboard=self.keyboard.schedule_menu(user)
                 )
                 return user
-            elif schedule["group_update"] is True:
-                user = User.update_user(user, data=dict(group_name=schedule["group_name"]))
+            elif group.error_text == "Error" or group.error_text == "Server error":
+                user = User.update_user(user, data=dict(group_name=None))
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=f"Не удалось найти группу «{group_name}»",
+                    keyboard=self.keyboard.schedule_menu(user)
+                )
+                return user
+        if "group_id" in group.data and "group_name" in group.data:
+            if group.data["group_update"] == 3:
+                user = User.update_user(user, data=dict(group_name=None))
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=f"Информационно образовательного портал не доступен. Попробуйте позже",
+                    keyboard=self.keyboard.schedule_menu(user)
+                )
+                return user
+            elif group.data["group_update"] == 1:
+                user = User.update_user(user, data=dict(group_name=group.data["group_name"]))
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
@@ -145,18 +233,18 @@ class Bot:
                     keyboard=self.keyboard.schedule_menu(user)
                 )
                 return user
-            elif schedule["group_update"] is False:
-                connection = 1
+            else:
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=f"Ищем расписание группы «{group_name}»",
                 )
-                while schedule["group_update"] is False and connection < 15:
+                connection = 1
+                while group.data["group_update"] == 0 and connection < 15:
                     connection += 1
-                    schedule = get_group(group_name)
-                    if schedule["group_update"] is True:
-                        user = User.update_user(user, data=dict(group_name=schedule["group_name"]))
+                    group = get_group(group_name)
+                    if group.data["group_update"] == 1:
+                        user = User.update_user(user, data=dict(group_name=group.data["group_name"]))
                         self.vk.messages.send(
                             peer_id=user.id,
                             random_id=get_random_id(),
@@ -174,16 +262,7 @@ class Bot:
                         keyboard=self.keyboard.schedule_menu(user)
                     )
                     return user
-        elif schedule == "fa_error":
-            user = User.update_user(user, data=dict(group_name=None))
-            self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message="Ошибка информационно образовательного портала. Обратитесь к администрации группы",
-                keyboard=self.keyboard.schedule_menu(user)
-            )
-            return user
-        elif schedule is None:
+        else:
             user = User.update_user(user, data=dict(group_name=None))
             self.vk.messages.send(
                 peer_id=user.id,
@@ -251,6 +330,7 @@ class Bot:
             )
             return None
 
+
     def send_teacher(self, user, payload):
         """
         Отправляет меню с выбором промежутка расписания для пользователя
@@ -293,7 +373,7 @@ class Bot:
             message="Ищем расписание",
         )
 
-        schedule = format_schedule(start_day=start_day, days=days, teacher=dict(id=user.found_teacher_id,
+        schedule = format_schedule(user, start_day=start_day, days=days, teacher=dict(id=user.found_teacher_id,
                                                                                 name=user.found_teacher_name))
         User.update_user(user=user, data=dict(found_teacher_id=None, found_teacher_name=None))
         if schedule is None:
@@ -315,6 +395,33 @@ class Bot:
     """
     Меню настроек
     """
+
+    def show_groups_or_location(self, user: User, act_type: str) -> User:
+        """
+        Обновляет поля
+
+        :param user:
+        :param act_type:
+        :return:
+        """
+
+        if act_type == "show_groups":
+            if user.show_groups is False:
+                user = User.update_user(user=user, data=dict(show_groups=True))
+            else:
+                user = User.update_user(user=user, data=dict(show_groups=False))
+        elif act_type == "show_location":
+            if user.show_location is False:
+                user = User.update_user(user=user, data=dict(show_location=True))
+            else:
+                user = User.update_user(user=user, data=dict(show_location=False))
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message="Настройки обновлены",
+            keyboard=self.keyboard.settings_menu(user)
+        )
+        return user
 
     def send_settings_menu(self, user: User) -> User:
         """

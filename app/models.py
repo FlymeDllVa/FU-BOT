@@ -1,5 +1,5 @@
 from app import db, session
-from sqlalchemy import Integer, String, Column
+from sqlalchemy import Integer, String, Column, Boolean
 
 
 class User(db):
@@ -8,11 +8,14 @@ class User(db):
     id = Column(Integer, primary_key=True, index=True, unique=True)
     update = Column(String, default="1.0")
     group_name = Column(String, default=None)
+    schedule_day_date = Column(String, default=None)
     found_teacher_id = Column(Integer, default=None)
     found_teacher_name = Column(String, default=None)
     subscription_time = Column(String, default=None)
     subscription_days = Column(String, default=None)
     subscription_group = Column(String, default=None)
+    show_location = Column(Boolean, default=False)
+    show_groups = Column(Boolean, default=False)
 
     @classmethod
     def filter_by_time(cls, time):

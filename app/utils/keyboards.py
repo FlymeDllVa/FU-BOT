@@ -68,6 +68,10 @@ class Keyboards:
                                 payload={"menu": "schedule_show", "start_day": 7, "days": 7})
             keyboard.add_line()
 
+            keyboard.add_button('Расписание на определенный день', color=VkKeyboardColor.DEFAULT,
+                                payload={"menu": "schedule_one_day", "start_day": 7, "days": 7})
+            keyboard.add_line()
+
         keyboard.add_button('Поиск преподавателя', color=VkKeyboardColor.DEFAULT, payload={"menu": "search_teacher"})
         keyboard.add_line()
 
@@ -93,6 +97,17 @@ class Keyboards:
         else:
             keyboard.add_button('Изменить группу', color=VkKeyboardColor.DEFAULT, payload={"menu": "change_group"})
             keyboard.add_line()
+
+        if user.show_groups is False:
+            keyboard.add_button('Группы в расписании', color=VkKeyboardColor.NEGATIVE, payload={"menu": "show_groups"})
+        else:
+            keyboard.add_button('Группы в расписании', color=VkKeyboardColor.POSITIVE, payload={"menu": "show_groups"})
+        if user.show_location is False:
+            keyboard.add_button('Корпус в расписании', color=VkKeyboardColor.NEGATIVE, payload={"menu": "show_location"})
+        else:
+            keyboard.add_button('Корпус в расписании', color=VkKeyboardColor.POSITIVE,
+                                payload={"menu": "show_location"})
+        keyboard.add_line()
 
         if (user.subscription_days is None or user.subscription_days == "CHANGES") and user.group_name:
             keyboard.add_button('Подписаться на расписание', color=VkKeyboardColor.DEFAULT,
