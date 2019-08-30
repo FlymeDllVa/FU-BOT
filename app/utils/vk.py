@@ -152,7 +152,7 @@ class Bot:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
-                message=f"Не удалось найти расписание на {date}",
+                message=f"Не удалось найти расписание на {date.strftime('%d.%m.%Y')}",
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return user

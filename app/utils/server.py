@@ -197,7 +197,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                     if len(lesson['groups'].split(', ')) > 1:
                         text += "Группы: "
                     else:
-                        text += "Группы: "
+                        text += "Группа: "
                     text += f"{lesson['groups']}\n"
                 if teacher is not None:
                     if lesson['audience']:
