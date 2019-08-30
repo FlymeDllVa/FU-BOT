@@ -259,7 +259,7 @@ class Bot:
         :return:
         """
 
-        user = User.update_user(user, data=dict(found_teacher_id="CHANGES", found_teacher_name="CHANGES"))
+        user = User.update_user(user, data=dict(found_teacher_id=0, found_teacher_name="CHANGES"))
         self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),

@@ -209,9 +209,10 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                         text += f", {lesson['location']}\n"
                     else:
                         text += "\n"
-                    teachers = format_name(lesson['teachers'])
-                    if teachers:
-                        text += f"Кто: {teachers}"
+                    if "teachers" in lesson:
+                        teachers = format_name(lesson['teachers'])
+                        if teachers:
+                            text += f"Кто: {teachers}"
                 text += "\n"
         else:
             text += f"Нет пар\n"

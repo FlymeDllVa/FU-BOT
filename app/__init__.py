@@ -1,10 +1,12 @@
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy import create_engine
 
 from config import Config
 
-engine = sqlalchemy.create_engine(Config.SQLALCHEMY_DATABASE_URI, connect_args={'check_same_thread': False})
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+
 db = declarative_base()
 session = scoped_session(sessionmaker(bind=engine))
 

@@ -75,7 +75,7 @@ def vk_bot_from_user(bot, event):
     elif "menu" not in payload:
         if user.group_name == "CHANGES":
             bot.send_check_group(user, message_lower)
-        if user.found_teacher_name == "CHANGES" and user.found_teacher_id == "CHANGES":
+        if user.found_teacher_name == "CHANGES" and user.found_teacher_id == 0:
             bot.search_teacher_schedule(user, message_lower)
         if user.subscription_days == "CHANGES":
             bot.update_subscribe_time(user, message_lower)
