@@ -5,7 +5,7 @@ from sqlalchemy import create_engine
 
 from config import Config
 
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI)
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_size=30, max_overflow=10)
 
 db = declarative_base()
 session = scoped_session(sessionmaker(bind=engine))
