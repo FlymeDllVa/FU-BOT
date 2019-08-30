@@ -169,14 +169,21 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
         schedule = get_schedule(user.group_name, date)
     else:
         schedule = get_schedule(user.group_name)
+        if schedule is not None:
+            if schedule["has_error"] is False:
+                schedule = schedule["data"]
+            else:
+                if schedule["error"] == "Update schedule":
+                    return schedule["error"]
+                else:
+                    return "error"
     if schedule is None:
         return None
-
     if date is None:
         date = datetime.datetime.today()
         date += datetime.timedelta(days=start_day)
     text = str()
-    for _ in range(1 if date is not None else days):
+    for _ in range(days):
         text_date = date.strftime('%d.%m.%Y')
         text += f"📅 {date_name(date)}, {text_date}\n"
         if text_date in schedule:

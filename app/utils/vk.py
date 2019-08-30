@@ -81,7 +81,21 @@ class Bot:
         """
 
         schedule = format_schedule(user, start_day=start_day, days=days)
-        if schedule is None:
+        if schedule == "Update schedule":
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message="Расписание обновляется. Попробуйте позже",
+            )
+            return None
+        elif schedule == "error":
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message="Ошибка получения расписания. Обратитесь к администрации",
+            )
+            return None
+        elif schedule is None:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -180,13 +194,22 @@ class Bot:
         group_name = group_name.strip().replace(" ", "").upper()
         group = get_group(group_name)
 
-        if group.has_error:
+        if group.has_error is False and group.data["group_name"] == group_name:
+            user = User.update_user(user, data=dict(group_name=group_name))
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message=f"Группа изменана на «{group_name}»",
+                keyboard=self.keyboard.schedule_menu(user)
+            )
+            return user
+        elif group.has_error is True:
             if group.error_text == "Timeout error":
                 group = get_group(group_name)
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
-                    message=f"Ищем расписание группы «{group_name}»",
+                    message=f"Не удалось сменить группу. Попробуйте позже",
                 )
             elif group.error_text == "Connection error":
                 user = User.update_user(user, data=dict(group_name=None))
@@ -210,58 +233,10 @@ class Bot:
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
-                    message=f"Не удалось найти группу «{group_name}»",
+                    message=f"Не удалось найти группу «{group_name}». Попробуйте позже",
                     keyboard=self.keyboard.schedule_menu(user)
                 )
                 return user
-        if "group_id" in group.data and "group_name" in group.data:
-            if group.data["group_update"] == 3:
-                user = User.update_user(user, data=dict(group_name=None))
-                self.vk.messages.send(
-                    peer_id=user.id,
-                    random_id=get_random_id(),
-                    message=f"Информационно образовательного портал не доступен. Попробуйте позже",
-                    keyboard=self.keyboard.schedule_menu(user)
-                )
-                return user
-            elif group.data["group_update"] == 1:
-                user = User.update_user(user, data=dict(group_name=group.data["group_name"]))
-                self.vk.messages.send(
-                    peer_id=user.id,
-                    random_id=get_random_id(),
-                    message=f"Группа изменана на «{group_name}»",
-                    keyboard=self.keyboard.schedule_menu(user)
-                )
-                return user
-            else:
-                self.vk.messages.send(
-                    peer_id=user.id,
-                    random_id=get_random_id(),
-                    message=f"Ищем расписание группы «{group_name}»",
-                )
-                connection = 1
-                while group.data["group_update"] == 0 and connection < 15:
-                    connection += 1
-                    group = get_group(group_name)
-                    if group.data["group_update"] == 1:
-                        user = User.update_user(user, data=dict(group_name=group.data["group_name"]))
-                        self.vk.messages.send(
-                            peer_id=user.id,
-                            random_id=get_random_id(),
-                            message=f"Группа изменана на «{group_name}»",
-                            keyboard=self.keyboard.schedule_menu(user)
-                        )
-                        return user
-                    time.sleep(2)
-                else:
-                    user = User.update_user(user, data=dict(group_name=None))
-                    self.vk.messages.send(
-                        peer_id=user.id,
-                        random_id=get_random_id(),
-                        message=f"Не удалось найти группу «{group_name}». Обратитесь к администрации",
-                        keyboard=self.keyboard.schedule_menu(user)
-                    )
-                    return user
         else:
             user = User.update_user(user, data=dict(group_name=None))
             self.vk.messages.send(
@@ -330,7 +305,6 @@ class Bot:
             )
             return None
 
-
     def send_teacher(self, user, payload):
         """
         Отправляет меню с выбором промежутка расписания для пользователя
@@ -374,7 +348,7 @@ class Bot:
         )
 
         schedule = format_schedule(user, start_day=start_day, days=days, teacher=dict(id=user.found_teacher_id,
-                                                                                name=user.found_teacher_name))
+                                                                                      name=user.found_teacher_name))
         User.update_user(user=user, data=dict(found_teacher_id=None, found_teacher_name=None))
         if schedule is None:
             self.vk.messages.send(
@@ -497,7 +471,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=f"Формируем расписания для группы {user.group_name} в {time}\nВыберите период, на который вы "
-            f"хотите получать расписание",
+                    f"хотите получать расписание",
             keyboard=self.keyboard.subscribe_to_schedule_day_menu(user)
         )
         return user
