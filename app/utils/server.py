@@ -188,7 +188,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
         text_date = date.strftime('%d.%m.%Y')
         text += f"📅 {date_name(date)}, {text_date}\n"
         if text_date in schedule:
-            for lesson in schedule[text_date]:
+            for lesson in sorted(schedule[text_date], key=lambda x: x['time_start']):
                 text += f"\n⏱{lesson['time_start']} – {lesson['time_end']}⏱\n"
                 text += f"{lesson['name']}\n"
                 if lesson['type']:

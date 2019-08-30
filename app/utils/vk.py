@@ -211,6 +211,7 @@ class Bot:
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=f"Не удалось сменить группу. Попробуйте позже",
+                    keyboard=self.keyboard.schedule_menu(user)
                 )
             elif group.error_text == "Connection error":
                 user = User.update_user(user, data=dict(group_name=None))

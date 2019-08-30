@@ -41,7 +41,6 @@ def vk_bot_from_user(bot, event):
 
     if message_lower == ("начать" or "start" or "сброс"):
         bot.send_main_menu(user)
-
     elif "menu" in payload:
         menu = payload["menu"]
         if menu == "main":
