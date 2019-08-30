@@ -151,10 +151,12 @@ def get_teacher(teacher_name: str) -> dict or None:
     return None
 
 
-def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = None, date: str = None) -> str or None:
+def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = None, date: str = None,
+                    text: str = "") -> str or None:
     """
     Форматирует расписание к виду который отправляет бот
 
+    :param text:
     :param date:
     :param teacher:
     :param start_day:
@@ -182,7 +184,6 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
     if date is None:
         date = datetime.datetime.today()
         date += datetime.timedelta(days=start_day)
-    text = str()
     for _ in range(days):
         text_date = date.strftime('%d.%m.%Y')
         text += f"📅 {date_name(date)}, {text_date}\n"

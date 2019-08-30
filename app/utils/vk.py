@@ -70,17 +70,18 @@ class Bot:
             )
         return user
 
-    def send_schedule(self, user: User, start_day: int = 0, days: int = 1) -> User or None:
+    def send_schedule(self, user: User, start_day: int = 0, days: int = 1, text: str = "") -> User or None:
         """
         Отсылает пользователю расписание
 
+        :param text:
         :param start_day:
         :param user:
         :param days:
         :return:
         """
 
-        schedule = format_schedule(user, start_day=start_day, days=days)
+        schedule = format_schedule(user, start_day=start_day, days=days, text=text)
         if schedule == "Update schedule":
             self.vk.messages.send(
                 peer_id=user.id,

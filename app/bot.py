@@ -81,8 +81,8 @@ def vk_bot_from_user(bot, event):
             bot.update_subscribe_time(user, message_lower)
         if user.schedule_day_date == "CHANGES":
             bot.send_day_schedule(user, message_lower)
-        # else:
-        #     bot.send_main_menu(user)
+    else:
+        bot.send_main_menu(user)
 
 
 def vk_bot_from_chat(bot, event):
