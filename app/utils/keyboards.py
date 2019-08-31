@@ -30,7 +30,7 @@ class Keyboards:
 
         keyboard.add_button('Расписание', color=VkKeyboardColor.DEFAULT, payload={"menu": "schedule"})
         keyboard.add_line()
-        keyboard.add_vkapps_button(label="Мероприятия", app_id=6216857, owner_id=-int(GROUP_ID), hash="send_events")
+        keyboard.add_vkapps_button(label="Мероприятия", app_id=6819359, owner_id=-int(GROUP_ID), hash="send_events")
         keyboard.add_line()
         keyboard.add_vkapps_button(label="Рассылка событий", app_id=5748831, owner_id=-int(GROUP_ID),
                                    hash="send_distributions")
