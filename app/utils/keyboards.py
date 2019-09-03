@@ -1,8 +1,4 @@
-import vk_api
-
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-from vk_api.utils import get_random_id
 from app.models import User
 from config import *
 
@@ -103,7 +99,8 @@ class Keyboards:
         else:
             keyboard.add_button('Группы в расписании', color=VkKeyboardColor.POSITIVE, payload={"menu": "show_groups"})
         if user.show_location is False:
-            keyboard.add_button('Корпус в расписании', color=VkKeyboardColor.NEGATIVE, payload={"menu": "show_location"})
+            keyboard.add_button('Корпус в расписании', color=VkKeyboardColor.NEGATIVE,
+                                payload={"menu": "show_location"})
         else:
             keyboard.add_button('Корпус в расписании', color=VkKeyboardColor.POSITIVE,
                                 payload={"menu": "show_location"})

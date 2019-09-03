@@ -1,12 +1,10 @@
 import vk_api
 import datetime
-import time
 
 from app.utils.keyboards import Keyboards
-from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
-from app.utils.server import get_schedule, get_group, get_teacher, format_schedule
+from app.utils.server import get_group, get_teacher, format_schedule
 from app.models import User
 
 
@@ -127,7 +125,7 @@ class Bot:
         )
         return user
 
-    def send_day_schedule(self, user: User, date) -> User:
+    def send_day_schedule(self, user: User, date: str) -> User:
         """
         Отправляет расписание на 1 день
 
@@ -473,7 +471,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=f"Формируем расписания для группы {user.group_name} в {time}\nВыберите период, на который вы "
-                    f"хотите получать расписание",
+            f"хотите получать расписание",
             keyboard=self.keyboard.subscribe_to_schedule_day_menu(user)
         )
         return user
@@ -518,7 +516,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=f'Вы подписались на раписание группы {user.subscription_group}\nТеперь каждый день в '
-                    f'{user.subscription_time} вы будете получать расписание на {day}',
+            f'{user.subscription_time} вы будете получать расписание на {day}',
             keyboard=self.keyboard.schedule_menu(user)
         )
         return user

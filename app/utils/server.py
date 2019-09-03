@@ -1,5 +1,4 @@
 import requests
-import json
 import datetime
 
 from config import *
@@ -24,7 +23,7 @@ class Data:
         return cls(data={}, has_error=True, error=error)
 
 
-def date_name(date: datetime):
+def date_name(date: datetime) -> str:
     """
     Определяет день недели по дате
 
@@ -35,7 +34,7 @@ def date_name(date: datetime):
     return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][date.weekday()]
 
 
-def format_name(lesson: list):
+def format_name(lesson: list) -> str:
     """
     Возравращает форматированную строку имен
 
@@ -58,7 +57,7 @@ def format_name(lesson: list):
     return ', '.join(names)
 
 
-def get_group(group_name: str) -> str or dict:
+def get_group(group_name: str) -> Data:
     """
     Запрашивает группу у сервера
 
@@ -110,7 +109,7 @@ def get_schedule(group_name: str, date: datetime = None) -> dict or None:
     return request.json()
 
 
-def get_teacher_schedule(teacher: dict):
+def get_teacher_schedule(teacher: dict) -> dict or None:
     """
     Запрашивает расписание преподавателя у сервера
 
@@ -145,13 +144,13 @@ def get_teacher(teacher_name: str) -> dict or None:
     if not request.status_code == 200:
         return None
     request = request.json()
-    if request is not None:
-        if len(request) > 0:
-            return request
+    if request['data'] is not None:
+        if len(request['data']) > 0:
+            return request['data']
     return None
 
 
-def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = None, date: str = None,
+def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = None, date: datetime = None,
                     text: str = "") -> str or None:
     """
     Форматирует расписание к виду который отправляет бот

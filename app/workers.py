@@ -3,8 +3,7 @@ import time
 
 from threading import Thread
 
-from app.bot import vk_bot_main
-from app.models import User
+from app.bot import vk_bot_main, vk_bot_answer_unread
 from app.utils.vk import *
 from config import *
 
@@ -17,6 +16,8 @@ def start_bot():
     """
     global bot
     print(" * BOT started")
+    # TODO мож в другой поток бахнуть
+    vk_bot_answer_unread(bot)
     while True:
         try:
             vk_bot_main(bot)
