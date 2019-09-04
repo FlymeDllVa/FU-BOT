@@ -219,7 +219,7 @@ class Bot:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
-                message=f"Группа изменана на «{group_name}»",
+                message=f"Группа изменена на «{group_name}»",
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return user
