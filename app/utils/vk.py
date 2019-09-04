@@ -500,7 +500,16 @@ class Bot:
         try:
             time = datetime.datetime.strptime(time, "%H:%M").strftime("%H:%M")
         except ValueError:
-            pass
+            user = User.update_user(user=user, data=dict(subscription_days=None,
+                                                         subscription_time=None,
+                                                         subscription_group=None))
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message=f"Не удалось добавить в рассылку расписания\nНеправильный формат даты",
+                keyboard=self.keyboard.schedule_menu(user)
+            )
+            return user
         user = User.update_user(user=user, data=dict(subscription_time=time,
                                                      subscription_group=user.group_name))
         self.vk.messages.send(
