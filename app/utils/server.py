@@ -34,29 +34,6 @@ def date_name(date: datetime) -> str:
     return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][date.weekday()]
 
 
-def format_name(lesson: list) -> str:
-    """
-    Возравращает форматированную строку имен
-
-    :param lesson:
-    :return:
-    """
-    names = list()
-    for teacher in lesson:
-        teacher_name = str()
-        if "surname" in teacher:
-            if teacher["surname"] is not None:
-                teacher_name += teacher['surname']
-        if "firstname" in teacher:
-            if teacher["firstname"] is not None:
-                teacher_name += " " + teacher['firstname']
-        if "patronymic" in teacher:
-            if teacher["patronymic"] is not None:
-                teacher_name += " " + teacher['patronymic']
-        names.append(teacher_name)
-    return ', '.join(names)
-
-
 def get_group(group_name: str) -> Data:
     """
     Запрашивает группу у сервера
@@ -217,8 +194,8 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                         text += f", {lesson['location']}\n"
                     else:
                         text += "\n"
-                    if "teachers" in lesson:
-                        teachers = format_name(lesson['teachers'])
+                    if "teachers_name" in lesson:
+                        teachers = ", ".join(lesson['teachers_name'])
                         if teachers:
                             text += f"Кто: {teachers}"
                 text += "\n"

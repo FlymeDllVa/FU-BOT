@@ -229,7 +229,7 @@ class Bot:
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
-                    message=f"Группа изменана на «{group_name}»\nДля работы расписания требуется время на обновление",
+                    message=f"Группа изменана на «{group_name}»\nДля работы расписания потребуется время на обновление",
                     keyboard=self.keyboard.schedule_menu(user)
                 )
                 return user
@@ -410,17 +410,23 @@ class Bot:
         if act_type == "show_groups":
             if user.show_groups is False:
                 user = User.update_user(user=user, data=dict(show_groups=True))
+                message = "Список групп будет отображаться в раписании"
             else:
                 user = User.update_user(user=user, data=dict(show_groups=False))
+                message = "Список групп не будет отображаться в раписании"
         elif act_type == "show_location":
             if user.show_location is False:
                 user = User.update_user(user=user, data=dict(show_location=True))
+                message = "Список корпусов будет отображаться в раписании"
             else:
                 user = User.update_user(user=user, data=dict(show_location=False))
+                message = "Список корпусов не будет отображаться в раписании"
+        else:
+            message = "Ошибка"
         self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
-            message="Настройки обновлены",
+            message=message,
             keyboard=self.keyboard.settings_menu(user)
         )
         return user
