@@ -70,6 +70,9 @@ def vk_bot_from_user(bot, event):
                       "subscribe_to_newsletter_today_and_tomorrow", "subscribe_to_newsletter_this_week",
                       "subscribe_to_newsletter_next_week"):
             bot.update_subscribe_day(user, menu)
+        elif menu == "cancel":
+            user.cancel_changes()
+            bot.send_main_menu(user)
         else:
             bot.send_main_menu(user)
     elif "menu" not in payload:

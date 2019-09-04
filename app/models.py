@@ -60,3 +60,14 @@ class User(db):
                 setattr(user, key, value)
         session.commit()
         return user
+
+    def cancel_changes(self):
+        if self.group_name == "CHANGES":
+            self.group_name = None
+        elif self.found_teacher_name == "CHANGES" and self.found_teacher_id == 0:
+            self.found_teacher_name = None
+        elif self.subscription_days == "CHANGES":
+            self.subscription_days = None
+        elif self.schedule_day_date == "CHANGES":
+            self.schedule_day_date = None
+        session.commit()

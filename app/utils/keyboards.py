@@ -59,13 +59,13 @@ class Keyboards:
             keyboard.add_line()
 
             keyboard.add_button('Эта неделя', color=VkKeyboardColor.DEFAULT,
-                                payload={"menu": "schedule_show", "start_day": 0, "days": 7})
+                                payload={"menu": "schedule_show", "start_day": -1, "days": 7})
             keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT,
-                                payload={"menu": "schedule_show", "start_day": 7, "days": 7})
+                                payload={"menu": "schedule_show", "start_day": -2, "days": 7})
             keyboard.add_line()
 
             keyboard.add_button('Расписание на определенный день', color=VkKeyboardColor.DEFAULT,
-                                payload={"menu": "schedule_one_day", "start_day": 7, "days": 7})
+                                payload={"menu": "schedule_one_day"})
             keyboard.add_line()
 
         keyboard.add_button('Поиск преподавателя', color=VkKeyboardColor.DEFAULT, payload={"menu": "search_teacher"})
@@ -120,7 +120,7 @@ class Keyboards:
                                     payload={"menu": "unsubscribe_to_newsletter"})
                 keyboard.add_line()
 
-        keyboard.add_button('← Назад', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
+        keyboard.add_button('← Назад', color=VkKeyboardColor.PRIMARY, payload={"menu": "cancel"})
 
         return keyboard.get_keyboard()
 
@@ -147,7 +147,7 @@ class Keyboards:
         keyboard.add_button('22:00', color=VkKeyboardColor.DEFAULT)
         keyboard.add_line()
 
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "cancel"})
 
         return keyboard.get_keyboard()
 
@@ -176,7 +176,7 @@ class Keyboards:
         keyboard.add_button('Следующая неделя', color=VkKeyboardColor.DEFAULT,
                             payload={"menu": "subscribe_to_newsletter_next_week"})
         keyboard.add_line()
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "cancel"})
 
         return keyboard.get_keyboard()
 
@@ -196,7 +196,7 @@ class Keyboards:
                                                                                     "found_teacher_id": teacher[0],
                                                                                     "found_teacher_name": teacher[1]})
             keyboard.add_line()
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
+        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={"menu": "cancel"})
 
         return keyboard.get_keyboard()
 
@@ -226,6 +226,6 @@ class Keyboards:
         keyboard.add_line()
 
         keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY,
-                            payload={"menu": "schedule"})
+                            payload={"menu": "cancel"})
 
         return keyboard.get_keyboard()

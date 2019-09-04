@@ -73,12 +73,15 @@ class Bot:
         Отсылает пользователю расписание
 
         :param text:
-        :param start_day:
+        :param start_day: -1 - начало этой недели, -2 - начало следующей
         :param user:
         :param days:
         :return:
         """
-
+        if start_day == -1:
+            start_day = -datetime.datetime.now().isoweekday() + 1
+        elif start_day == -2:
+            start_day = 7 - datetime.datetime.now().isoweekday() + 1
         schedule = format_schedule(user, start_day=start_day, days=days, text=text)
         if schedule == "Update schedule":
             self.vk.messages.send(
@@ -463,8 +466,10 @@ class Bot:
         :param time:
         :return:
         """
-
-        time = datetime.datetime.strptime(time, "%H:%M").strftime("%H:%M")
+        try:
+            time = datetime.datetime.strptime(time, "%H:%M").strftime("%H:%M")
+        except ValueError:
+            pass
         user = User.update_user(user=user, data=dict(subscription_time=time,
                                                      subscription_group=user.group_name))
         self.vk.messages.send(
