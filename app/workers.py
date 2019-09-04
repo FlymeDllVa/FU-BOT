@@ -41,11 +41,11 @@ def schedule_distribution(bot):
             elif user.subscription_days == "tomorrow":
                 bot.send_schedule(user, start_day=1, days=1, text="Ваше расписание на завтра\n")
             elif user.subscription_days == "today_and_tomorrow":
-                bot.send_schedule(user, days=2, text="Ваше расписание на два дня\n")
+                bot.send_schedule(user, days=2, text="Ваше расписание на сегодня и завтра\n\n")
             elif user.subscription_days == "this_week":
-                bot.send_schedule(user, days=7, text="Ваше расписание на 7 дней вперед\n")
+                bot.send_schedule(user, days=7, text="Ваше расписание на текущую неделю\n\n")
             elif user.subscription_days == "next_week":
-                bot.send_schedule(user, start_day=7, days=7)
+                bot.send_schedule(user, start_day=7, days=7, text="Ваше расписание на следующую неделю\n\n")
 
 
 def start_workers():

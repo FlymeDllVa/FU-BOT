@@ -91,11 +91,6 @@ def vk_bot_from_user(bot, event):
 def vk_bot_answer_unread(bot):
     unread = bot.vk.messages.getConversations(filter='unread', count=25)
 
-    # TODO разобраться с этим костылем
-    class UserSimple:
-        def __init__(self, id):
-            self.id = id
-
     for conversation in unread['items']:
         # -- Если вдруг понадобится --
         # payload = json.loads(conversation['last_message']['payload']) if 'payload' in conversation[
@@ -103,12 +98,13 @@ def vk_bot_answer_unread(bot):
         user = conversation['last_message']['peer_id']
         try:
             # TODO решить что писать людям
-            bot.send_main_menu(UserSimple(user))
+            user = User.search_user(user)
+            bot.send_main_menu(user)
         except Exception:
             bot.vk.messages.markAsRead(peer_id=user)
 
 
-def vk_bot_from_chat(bot, event):
+Щdef vk_bot_from_chat(bot, event):
     """
     Обработка сообщений в беседах
 

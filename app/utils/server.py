@@ -76,11 +76,13 @@ def get_group(group_name: str) -> Data:
         return Data.error('Server error')
     elif request.status_code == 400:
         return Data.error('Not found')
+    elif request.status_code == 426:
+        return Data.error('Refreshes')
     elif not request.status_code == 200:
         return Data.error('Error')
     request_json = request.json()
-    if "group_update" in request_json:
-        return Data(request_json)
+    if "data" in request_json:
+        return Data(request_json["data"])
     else:
         return Data.error('Connection error')
 
@@ -104,6 +106,16 @@ def get_schedule(group_name: str, date: datetime = None) -> dict or None:
         request = session.post(f"{SERVER_URL}api/v1/schedule/group", json=json_obj, timeout=5)
     except requests.exceptions.ReadTimeout:
         return None
+    if request.status_code == 523:
+        return 'Connection error'
+    elif request.status_code == 500:
+        return 'Server error'
+    elif request.status_code == 400:
+        return 'Not found'
+    elif request.status_code == 426:
+        return 'Refreshes'
+    elif not request.status_code == 200:
+        return 'Error'
     if not request.status_code == 200:
         return None
     return request.json()
@@ -170,16 +182,12 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
         schedule = get_schedule(user.group_name, date)
     else:
         schedule = get_schedule(user.group_name)
-        if schedule is not None:
-            if schedule["has_error"] is False:
-                schedule = schedule["data"]
-            else:
-                if schedule["error"] == "Update schedule":
-                    return schedule["error"]
-                else:
-                    return "error"
+        if schedule in ('Connection error', 'Server error', 'Not found', 'Refreshes', 'Error'):
+            return schedule
     if schedule is None:
         return None
+    else:
+        schedule = schedule["data"]
     if date is None:
         date = datetime.datetime.today()
         date += datetime.timedelta(days=start_day)
