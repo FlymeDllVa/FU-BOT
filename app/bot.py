@@ -72,7 +72,7 @@ def vk_bot_from_user(bot, event):
             bot.update_subscribe_day(user, menu)
         elif menu == "cancel":
             user.cancel_changes()
-            bot.send_main_menu(user)
+            bot.send_schedule_menu(user)
         else:
             bot.send_main_menu(user)
     elif "menu" not in payload:
