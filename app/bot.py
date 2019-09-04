@@ -104,7 +104,7 @@ def vk_bot_answer_unread(bot):
             bot.vk.messages.markAsRead(peer_id=user)
 
 
-Щdef vk_bot_from_chat(bot, event):
+def vk_bot_from_chat(bot, event):
     """
     Обработка сообщений в беседах
 

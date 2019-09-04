@@ -158,7 +158,7 @@ class Bot:
             elif len(date.split(".")) == 2:
                 date = datetime.datetime.strptime(f"{date}.{datetime.datetime.now().year}", '%d.%m.%Y')
             else:
-                assert ValueError
+                raise ValueError
         except ValueError:
             self.vk.messages.send(
                 peer_id=user.id,
