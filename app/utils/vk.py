@@ -1,3 +1,4 @@
+import urllib.parse
 import vk_api
 import datetime
 
@@ -6,6 +7,7 @@ from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
 from app.utils.server import get_group, get_teacher, format_schedule
 from app.models import User
+from config import CALENDAR_LINK
 
 
 class Bot:
@@ -267,8 +269,6 @@ class Bot:
                     keyboard=self.keyboard.schedule_menu(user)
                 )
                 return user
-
-
 
     """
     Поиск преподавателя
@@ -553,6 +553,27 @@ class Bot:
             random_id=get_random_id(),
             message=f'Вы подписались на раписание группы {user.subscription_group}\nТеперь каждый день в '
             f'{user.subscription_time} вы будете получать расписание на {day}',
+            keyboard=self.keyboard.schedule_menu(user)
+        )
+        return user
+
+    def chose_calendar(self, user: User):
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message="Инструкции пока тут нет, но она должна потом появиться. "
+                    "\nДля гугла вставлять сюда: https://calendar.google.com/calendar/r/settings/addbyurl",
+            keyboard=self.keyboard.chose_calendar()
+        )
+        return user
+
+    def send_calendar(self, user: User, army: bool):
+        link = CALENDAR_LINK(
+            urllib.parse.quote(user.group_name)) + f'?army={1 if army else 0}&address={1 if user.show_location else 0}'
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message=f"Ссылка на календарь для подписки: {link}",
             keyboard=self.keyboard.schedule_menu(user)
         )
         return user

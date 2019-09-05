@@ -73,6 +73,8 @@ def vk_bot_from_user(bot, event):
         elif menu == "cancel":
             user.cancel_changes()
             bot.send_schedule_menu(user)
+        elif menu == "get_calendar":
+            bot.send_calendar(user, payload["army"])
         else:
             bot.send_main_menu(user)
     elif "menu" not in payload:
@@ -84,6 +86,8 @@ def vk_bot_from_user(bot, event):
             bot.update_subscribe_time(user, message_lower)
         elif user.schedule_day_date == "CHANGES":
             bot.send_day_schedule(user, message_lower)
+        elif message == "📅":
+            bot.chose_calendar(user)
         else:
             bot.send_main_menu(user)
 

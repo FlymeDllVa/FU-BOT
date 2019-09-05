@@ -4,8 +4,8 @@ from config import *
 
 
 class Keyboards:
-    @classmethod
-    def empty_keyboard(cls) -> str:
+    @staticmethod
+    def empty_keyboard() -> str:
         """
         Возвращает пустую клавиатуру
 
@@ -14,8 +14,8 @@ class Keyboards:
 
         return VkKeyboard().get_empty_keyboard()
 
-    @classmethod
-    def main_menu(cls):
+    @staticmethod
+    def main_menu():
         """
         Возвращает главное меню
 
@@ -33,8 +33,8 @@ class Keyboards:
 
         return keyboard.get_keyboard()
 
-    @classmethod
-    def schedule_menu(cls, user: User) -> str:
+    @staticmethod
+    def schedule_menu(user: User) -> str:
         """
         Возвращает клавиатуру главного меню
 
@@ -76,8 +76,8 @@ class Keyboards:
 
         return keyboard.get_keyboard()
 
-    @classmethod
-    def settings_menu(cls, user: User) -> str:
+    @staticmethod
+    def settings_menu(user: User) -> str:
         """
         Возвращает клавиатуру настроек
 
@@ -124,8 +124,8 @@ class Keyboards:
 
         return keyboard.get_keyboard()
 
-    @classmethod
-    def subscribe_to_schedule_start_menu(cls, user: User) -> str:
+    @staticmethod
+    def subscribe_to_schedule_start_menu(user: User) -> str:
         """
         Возвращает клавиатуру подписки на расписание
 
@@ -151,8 +151,8 @@ class Keyboards:
 
         return keyboard.get_keyboard()
 
-    @classmethod
-    def subscribe_to_schedule_day_menu(cls, user: User) -> str:
+    @staticmethod
+    def subscribe_to_schedule_day_menu(user: User) -> str:
         """
         Возвращает клавиатуру для выбора дня рассылки
 
@@ -180,8 +180,8 @@ class Keyboards:
 
         return keyboard.get_keyboard()
 
-    @classmethod
-    def teachers_menu(cls, teachers: list) -> str:
+    @staticmethod
+    def teachers_menu(teachers: list) -> str:
         """
         Возвращает клавиатуру для выбора преподавателя
 
@@ -200,8 +200,8 @@ class Keyboards:
 
         return keyboard.get_keyboard()
 
-    @classmethod
-    def find_teacher_menu(cls, user: User) -> str:
+    @staticmethod
+    def find_teacher_menu(user: User) -> str:
         """
         Возвращает клавиатуру для выбора даты
         :param user:
@@ -227,5 +227,24 @@ class Keyboards:
 
         keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY,
                             payload={"menu": "cancel"})
+
+        return keyboard.get_keyboard()
+
+    @staticmethod
+    def chose_calendar():
+        """
+        Возвращает выбор типа календаря
+
+        :return:
+        """
+
+        keyboard = VkKeyboard()
+
+        keyboard.add_button('С военкой', color=VkKeyboardColor.DEFAULT, payload={"menu": "get_calendar", "army": True})
+        keyboard.add_line()
+        keyboard.add_button('Без военки', color=VkKeyboardColor.DEFAULT,
+                            payload={"menu": "get_calendar", "army": False})
+        keyboard.add_line()
+        keyboard.add_button('Расписание', color=VkKeyboardColor.PRIMARY, payload={"menu": "schedule"})
 
         return keyboard.get_keyboard()
