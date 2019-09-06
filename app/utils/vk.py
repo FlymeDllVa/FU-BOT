@@ -110,7 +110,8 @@ class Bot:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
-                message="Ошибка получения расписания. Обратитесь к администрации",
+                message="Ошибка получения расписания. Попробуйте заново выбрать группу в настройках или "
+                        "обратитесь к администрации",
             )
             return None
         elif schedule is None:
