@@ -245,7 +245,7 @@ class Bot:
                     keyboard=self.keyboard.schedule_menu(user)
                 )
             elif group.error_text == "Timeout error":
-                group = get_group(group_name)
+                # group = get_group(group_name)
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
@@ -299,14 +299,15 @@ class Bot:
             message="Ищем преподавателя",
         )
         teachers = get_teacher(teacher_name)
-        if teachers == "timeout":
+        if teachers.has_error:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message="Не удалось подключиться к информационно образовательному порталу. Попробуйте позже",
                 keyboard=self.keyboard.schedule_menu(user)
             )
-        elif teachers:
+        elif teachers.data:
+            teachers = teachers.data
             if len(teachers) == 1:
                 user = User.update_user(user=user, data=dict(found_teacher_id=teachers[0][0],
                                                              found_teacher_name=teachers[0][1]))

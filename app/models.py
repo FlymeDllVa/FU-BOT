@@ -8,6 +8,7 @@ class User(db):
     id = Column(Integer, primary_key=True, index=True, unique=True)
     update = Column(String, default="1.0")
     group_name = Column(String, default=None)
+    group_id = Column(Integer, default=None)
     schedule_day_date = Column(String, default=None)
     found_teacher_id = Column(Integer, default=None)
     found_teacher_name = Column(String, default=None)
