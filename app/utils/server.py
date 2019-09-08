@@ -53,13 +53,14 @@ def get_group(group_name: str) -> Data:
         return Data.error('Not found')
 
 
-def get_schedule(group_id: str, date_start: datetime = None, date_end: datetime = None) -> Data:
+def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
     """
     Запрашивает расписание у сервера
 
-    :param group_id:
+    :param id:
     :param date_start:
     :param date_end:
+    :param type: 'group' 'lecturer'
     :return: {'dd.mm.yyyy': {'time_start': , 'time_end': , 'name': , 'type': , 'groups': , 'audience': , 'location': ,
                              'teachers_name': }}
     """
@@ -67,7 +68,7 @@ def get_schedule(group_id: str, date_start: datetime = None, date_end: datetime 
         date_start = datetime.datetime.today()
     if not date_end:
         date_end = datetime.datetime.today() + datetime.timedelta(days=1)
-    request = requests.get(f"http://ruz.fa.ru/api/schedule/group/{group_id}?start={date_start.strftime('%Y.%m.%d')}&"
+    request = requests.get(f"http://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}&"
                            f"finish={date_end.strftime('%Y.%m.%d')}&lng=1")
     request_json = request.json()
     res = {}
@@ -80,15 +81,15 @@ def get_schedule(group_id: str, date_start: datetime = None, date_end: datetime 
     return Data(res)
 
 
-def get_teacher(teacher_name: str) -> dict or None:
+def get_teacher(teacher_name: str) -> list or None:
     """
-    Запрашивает расписание у сервера
+    Поиск преподователя
 
     :param teacher_name:
-    :return:
+    :return: [(id, name), ...]
     """
     try:
-        request = requests.get(f"http://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=person", timeout=2)
+        request = requests.get(f"http://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=lecturer", timeout=2)
     except requests.exceptions.ReadTimeout:
         return Data.error('Timeout error')
     teachers = [(i['id'], i['label']) for i in request.json() if i['id']]
@@ -115,7 +116,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
         date_start = date
         date_end = date
     if teacher is not None:
-        schedule = get_schedule(teacher['id'], date_start, date_end)
+        schedule = get_schedule(teacher['id'], date_start, date_end, type='lecturer')
     else:
         schedule = get_schedule(user.group_id, date_start, date_end)
         if schedule in ('Connection error', 'Server error', 'Not found', 'Refreshes', 'Error'):
@@ -136,7 +137,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                 text += f"{lesson['name']}\n"
                 if lesson['type']:
                     text += f"{lesson['type']}\n"
-                if teacher is not None or user.show_groups is True:
+                if (teacher is not None or user.show_groups) and lesson['groups']:
                     if len(lesson['groups'].split(', ')) > 1:
                         text += "Группы: "
                     else:
