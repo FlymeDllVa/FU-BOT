@@ -3,6 +3,7 @@ import json
 
 from vk_api.bot_longpoll import VkBotEventType
 from app.models import User
+import app.utils.constants as const
 
 
 def vk_bot_main(bot):
@@ -42,46 +43,58 @@ def vk_bot_from_user(bot, event):
         bot.send_main_menu(user)
     elif "menu" in payload:
         menu = payload["menu"]
-        if menu == "main":
+        if menu == const.MENU_MAIN:
             bot.send_main_menu(user)
-        elif menu == "schedule":
+        elif menu == const.MENU_SCHEDULE:
             bot.send_schedule_menu(user)
-        elif menu == "schedule_show":
+        elif menu == const.MENU_SCHEDULE_SHOW:
             bot.send_schedule(user, start_day=payload["start_day"], days=payload["days"])
-        elif menu == "schedule_one_day":
+        elif menu == const.MENU_SCHEDULE_SHOW_ONE:
             bot.send_one_day_schedule(user)
-        elif menu == "search_teacher":
+        elif menu == const.MENU_SEARCH_TEACHER:
             bot.send_search_teacher(user)
-        elif menu == "teachers":
+        elif menu == const.MENU_TEACHER:
             bot.send_teacher(user, payload)
-        elif menu == "teacher_schedule_show":
+        elif menu == const.MENU_SCHEDULE_FOUND:
             bot.send_teacher_schedule(user, start_day=payload["start_day"], days=payload["days"])
-        elif menu == "settings":
+        elif menu == const.MENU_SETTINGS:
             bot.send_settings_menu(user)
-        elif menu == "show_groups" or menu == "show_location":
-            bot.show_groups_or_location(user, payload["menu"])
-        elif menu == "change_group":
+        elif menu == const.MENU_SET_SETTINGS:
+            bot.show_groups_or_location(user, payload["type"])
+        elif menu == const.MENU_CHANGE_GROUP:
             bot.send_choice_group(user)
-        elif menu == "subscribe_to_newsletter":
+        elif menu == const.MENU_SUBSCRIBE:
             bot.subscribe_schedule(user)
-        elif menu == "unsubscribe_to_newsletter":
+        elif menu == const.MENU_UNSUBSCRIBE:
             bot.unsubscribe_schedule(user)
-        elif menu in ("subscribe_to_newsletter_today", "subscribe_to_newsletter_tomorrow",
-                      "subscribe_to_newsletter_today_and_tomorrow", "subscribe_to_newsletter_this_week",
-                      "subscribe_to_newsletter_next_week"):
-            bot.update_subscribe_day(user, menu)
-        elif menu == "cancel":
+        elif menu == const.MENU_UPDATE_SUBSCRIPTION:
+            bot.update_subscribe_day(user, payload['type'])
+        elif menu == const.MENU_CANCEL:
             user.cancel_changes()
             bot.send_schedule_menu(user)
-        elif menu == "get_calendar":
+        elif menu == const.MENU_CHOOSE_ROLE:
+            bot.set_role(user, payload["role"])
+        elif menu == const.MENU_GET_CALENDAR:
             bot.send_calendar(user, payload["army"])
+        elif menu == const.MENU_SET_TEACHER:
+            bot.set_teacher(user, payload)
+        elif menu == const.MENU_SEARCH:
+            bot.search(user)
+        elif menu == const.MENU_SEARCH_GROUP:
+            bot.search_group(user)
         else:
             bot.send_main_menu(user)
     elif "menu" not in payload:
-        if user.group_name == "CHANGES":
-            bot.send_check_group(user, message_lower)
-        elif user.found_teacher_name == "CHANGES" and user.found_teacher_id == 0:
-            bot.search_teacher_schedule(user, message_lower)
+        if user.current_name == "CHANGES":
+            if user.role == const.ROLE_STUDENT:
+                bot.send_check_group(user, message_lower)
+            else:
+                bot.search_teacher_to_set(user, message_lower)
+        elif user.found_name == "CHANGES" and user.found_id == 0:
+            if user.found_type == const.ROLE_TEACHER:
+                bot.search_teacher_schedule(user, message_lower)
+            else:
+                bot.search_check_group(user, message_lower)
         elif user.subscription_days == "CHANGES":
             bot.update_subscribe_time(user, message_lower)
         elif user.schedule_day_date == "CHANGES":

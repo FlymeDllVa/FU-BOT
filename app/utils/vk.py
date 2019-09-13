@@ -8,6 +8,7 @@ from vk_api.utils import get_random_id
 from app.utils.server import get_group, get_teacher, format_schedule
 from app.models import User
 from config import CALENDAR_LINK
+import app.utils.constants as const
 
 
 class Bot:
@@ -38,6 +39,8 @@ class Bot:
         :param user:
         :return:
         """
+        if user.role is None:
+            return self.change_role(user)
 
         self.vk.messages.send(
             peer_id=user.id,
@@ -220,7 +223,7 @@ class Bot:
         group_name = group_name.strip().replace(" ", "").upper()
         group = get_group(group_name)
         if group.has_error is False:
-            user = User.update_user(user, data=dict(group_name=group_name))
+            user = User.update_user(user, data=dict(current_name=group_name, current_id=group.data))
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -393,6 +396,59 @@ class Bot:
             )
             return None
 
+    def search_teacher_to_set(self, user: User, teacher_name: str) -> User or None:
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message="Поиск...",
+        )
+        teachers = get_teacher(teacher_name)
+        if teachers.has_error:
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message="Не удалось подключиться к информационно образовательному порталу. Попробуйте позже",
+                keyboard=self.keyboard.schedule_menu(user)
+            )
+        elif teachers.data:
+            teachers = teachers.data
+            if len(teachers) == 1:
+                user = User.update_user(user=user, data=dict(current_id=teachers[0][0],
+                                                             current_name=teachers[0][1]))
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=f"Найденный преподаватель: {teachers[0][1]}",
+                    keyboard=self.keyboard.schedule_menu(user)
+                )
+            else:
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message="Выберите нужного преподавателя",
+                    keyboard=self.keyboard.found_list(teachers, to_set=True)
+                )
+                return user
+        else:
+            User.update_user(user=user, data=dict(found_id=None, found_name=None, found_type=None))
+            self.vk.messages.send(
+                peer_id=user.id,
+                random_id=get_random_id(),
+                message=f"Преподаватель не найден",
+                keyboard=self.keyboard.schedule_menu(user)
+            )
+            return None
+
+    def set_teacher(self, user, payload):
+        user = User.update_user(user=user, data=dict(current_id=payload['found_id'],
+                                                     current_name=payload['found_name']))
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message=f"Найденный преподаватель: {payload['found_name']}",
+            keyboard=self.keyboard.schedule_menu(user)
+        )
+
     def send_teacher(self, user, payload):
         """
         Отправляет меню с выбором промежутка расписания для пользователя
@@ -468,14 +524,14 @@ class Bot:
         :return:
         """
 
-        if act_type == "show_groups":
+        if act_type == const.SETTINGS_TYPE_GROUPS:
             if user.show_groups is False:
                 user = User.update_user(user=user, data=dict(show_groups=True))
                 message = "Список групп будет отображаться в раписании"
             else:
                 user = User.update_user(user=user, data=dict(show_groups=False))
                 message = "Список групп не будет отображаться в раписании"
-        elif act_type == "show_location":
+        elif act_type == const.SETTINGS_TYPE_LOCATION:
             if user.show_location is False:
                 user = User.update_user(user=user, data=dict(show_location=True))
                 message = "Список корпусов будет отображаться в раписании"
@@ -591,19 +647,19 @@ class Bot:
         :return:
         """
 
-        if menu == "subscribe_to_newsletter_today":
+        if menu == const.SUBSCRIPTION_TODAY:
             subscription_days = "today"
             day = "сегодня"
-        elif menu == "subscribe_to_newsletter_tomorrow":
+        elif menu == const.SUBSCRIPTION_TOMORROW:
             subscription_days = "tomorrow"
             day = "завтра"
-        elif menu == "subscribe_to_newsletter_today_and_tomorrow":
+        elif menu == const.SUBSCRIPTION_TODAY_TOMORROW:
             subscription_days = "today_and_tomorrow"
             day = "текущий и следующий день"
-        elif menu == "subscribe_to_newsletter_this_week":
+        elif menu == const.SUBSCRIPTION_WEEK:
             subscription_days = "this_week"
             day = "текущую неделю"
-        elif menu == "subscribe_to_newsletter_next_week":
+        elif menu == const.SUBSCRIPTION_NEXT_WEEK:
             subscription_days = "next_week"
             day = "следующую неделю"
         else:
@@ -646,5 +702,45 @@ class Bot:
             random_id=get_random_id(),
             message=f"Ссылка на календарь для подписки: {link}",
             keyboard=self.keyboard.schedule_menu(user)
+        )
+        return user
+
+    def change_role(self, user: User):
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message="Привет!\n\nДля просмотра раписания требутся выбрать кто ты",
+            keyboard=self.keyboard.choose_role()
+        )
+        return user
+
+    def set_role(self, user: User, role: str):
+        message = "Напишите название вашей группы\n\nНапример «ПИ18-1»" if role == const.ROLE_STUDENT else \
+            "Напишите ваше ФИО\n\nНапример «Коротеев Михаил Викторович»"
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message=message,
+            keyboard=self.keyboard.empty_keyboard()
+        )
+        User.update_user(user=user, data=dict(current_name='CHANGES', role=role))
+        return user
+
+    def search(self, user):
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message='Выбери что искать',
+            keyboard=self.keyboard.search_menu()
+        )
+        return user
+
+    def search_group(self, user):
+        User.update_user(user=user, data=dict(found_id=0, found_name='CHANGES', found_type=const.ROLE_STUDENT))
+        self.vk.messages.send(
+            peer_id=user.id,
+            random_id=get_random_id(),
+            message='Введи название группы',
+            keyboard=self.keyboard.empty_keyboard()
         )
         return user

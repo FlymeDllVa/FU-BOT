@@ -6,6 +6,7 @@ class User(db):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
+    role = Column(String, default=None)
     update = Column(String, default="1.0")
     current_name = Column(String, default=None)
     current_id = Column(Integer, default=None)

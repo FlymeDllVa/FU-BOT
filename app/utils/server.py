@@ -46,9 +46,9 @@ def get_group(group_name: str) -> Data:
         request = requests.get(f"http://ruz.fa.ru/api/search?term={quote(group_name)}&type=group", timeout=2)
     except requests.exceptions.ReadTimeout:
         return Data.error('Timeout error')
-    found_group = request.json()[0]
-    if found_group['label'].strip().upper() == group_name:
-        return Data(found_group['id'])
+    found_group = request.json()
+    if found_group and found_group[0]['label'].strip().upper() == group_name:
+        return Data(found_group[0]['id'])
     else:
         return Data.error('Not found')
 
@@ -71,6 +71,8 @@ def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None
     request = requests.get(f"http://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}&"
                            f"finish={date_end.strftime('%Y.%m.%d')}&lng=1")
     request_json = request.json()
+    if 'error' in request_json:
+        return Data.error(request_json['error'])
     res = {}
     for i in request_json:
         res.setdefault(datetime.datetime.strptime(i['date'], '%Y.%m.%d').strftime('%d.%m.%Y'), []).append(
@@ -78,7 +80,7 @@ def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None
                  groups=i['stream'], audience=i['auditorium'], location=i['building'], teachers_name=i['lecturer']
                  )
         )
-    return Data(res)
+    return Data({key: sorted(value, key=lambda x: x['time_start']) for key, value in res.items()})
 
 
 def get_teacher(teacher_name: str) -> list or None:
