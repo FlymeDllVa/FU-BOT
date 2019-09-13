@@ -7,11 +7,12 @@ class User(db):
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
     update = Column(String, default="1.0")
-    group_name = Column(String, default=None)
-    group_id = Column(Integer, default=None)
+    current_name = Column(String, default=None)
+    current_id = Column(Integer, default=None)
     schedule_day_date = Column(String, default=None)
-    found_teacher_id = Column(Integer, default=None)
-    found_teacher_name = Column(String, default=None)
+    found_id = Column(Integer, default=None)
+    found_name = Column(String, default=None)
+    found_type = Column(String, default=None)
     subscription_time = Column(String, default=None)
     subscription_days = Column(String, default=None)
     subscription_group = Column(String, default=None)
@@ -63,10 +64,11 @@ class User(db):
         return user
 
     def cancel_changes(self):
-        if self.group_name == "CHANGES":
-            self.group_name = None
-        elif self.found_teacher_name == "CHANGES" and self.found_teacher_id == 0:
-            self.found_teacher_name = None
+        if self.current_name == "CHANGES":
+            self.current_name = None
+        elif self.found_name == "CHANGES" and self.found_id == 0:
+            self.found_name = None
+            self.found_type = None
         elif self.subscription_days == "CHANGES":
             self.subscription_days = None
         elif self.schedule_day_date == "CHANGES":

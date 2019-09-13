@@ -11,8 +11,9 @@ LOGIN = ""
 PASSWORD = ""
 
 # VK CONFIG
-TOKEN = ""
-GROUP_ID = ""
+TOKEN = "80144b9aad54d7e52486556322002512cfb9b0091fe30530258648532b75324c75330b80a77d2aa46b77e"
+current_id = "174550671"
+
 
 class Config(object):
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'bot'

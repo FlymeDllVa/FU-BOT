@@ -116,9 +116,10 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
         date_start = date
         date_end = date
     if teacher is not None:
-        schedule = get_schedule(teacher['id'], date_start, date_end, type='lecturer')
+        schedule = get_schedule(teacher['id'], date_start, date_end,
+                                type='lecturer' if teacher['type'] == 'teacher' else 'group')
     else:
-        schedule = get_schedule(user.group_id, date_start, date_end)
+        schedule = get_schedule(user.current_id, date_start, date_end)
         if schedule in ('Connection error', 'Server error', 'Not found', 'Refreshes', 'Error'):
             return schedule
     if schedule is None:
@@ -147,7 +148,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                     if lesson['audience']:
                         text += f"Кабинет: {lesson['audience']}, "
                     text += f"{lesson['location']}"
-                if user.group_name is not None and teacher is None:
+                if user.current_name is not None and teacher is None:
                     if lesson['audience']:
                         text += f"Где: {lesson['audience']}"
                     if user.show_location is True and lesson['location'] is not None:
