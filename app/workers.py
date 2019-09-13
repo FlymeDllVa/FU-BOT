@@ -65,7 +65,7 @@ def start_workers():
 """
 Run program
 """
-bot = Bot(TOKEN, current_id)
+bot = Bot(TOKEN, GROUP_ID)
 bot_flow = Thread(target=start_bot)
 workers_flow = Thread(target=start_workers)
 bot_flow.start()

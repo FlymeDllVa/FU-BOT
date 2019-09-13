@@ -6,13 +6,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 SERVER_URL = "http://127.0.0.1:5000/"
 CALENDAR_LINK = lambda group: f'http://84.201.185.101/api/v1/schedule/{group}/calendar.ics'
 
-# ИОП
-LOGIN = ""
-PASSWORD = ""
-
 # VK CONFIG
-TOKEN = "80144b9aad54d7e52486556322002512cfb9b0091fe30530258648532b75324c75330b80a77d2aa46b77e"
-current_id = "174550671"
+TOKEN = ""
+GROUP_ID = ""
 
 
 class Config(object):
