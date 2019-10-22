@@ -32,3 +32,11 @@ SUBSCRIPTION_WEEK = 'this_week'
 SUBSCRIPTION_NEXT_WEEK = 'next_week'
 
 CHANGES = 'CHANGES'
+
+PAYLOAD_FOUND_ID = "found_id"
+PAYLOAD_FOUND_NAME = "found_name"
+PAYLOAD_MENU = "menu"
+PAYLOAD_START_DAY = "start_day"
+PAYLOAD_DAYS = "days"
+PAYLOAD_TYPE = "type"
+PAYLOAD_ROLE = "role"

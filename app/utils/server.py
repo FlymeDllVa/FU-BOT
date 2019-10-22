@@ -122,9 +122,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                                 type='lecturer' if teacher['type'] == 'teacher' else 'group')
     else:
         schedule = get_schedule(user.current_id, date_start, date_end)
-        if schedule in ('Connection error', 'Server error', 'Not found', 'Refreshes', 'Error'):
-            return schedule
-    if schedule is None:
+    if schedule.has_error:
         return None
     else:
         schedule = schedule.data

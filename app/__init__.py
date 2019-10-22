@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 
 from config import Config
 
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, pool_size=30, max_overflow=10)
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, **Config.DB_SETTINGS)
 
 db = declarative_base()
 session = scoped_session(sessionmaker(bind=engine))
@@ -12,5 +12,5 @@ session = scoped_session(sessionmaker(bind=engine))
 from app import models
 from app.workers import *
 
-# db.metadata.drop_all()
+# db.metadata.drop_all(engine)
 db.metadata.create_all(engine)
