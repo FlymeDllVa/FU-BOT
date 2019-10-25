@@ -18,9 +18,11 @@ class Keyboards:
     @staticmethod
     def choose_role():
         keyboard = VkKeyboard()
-        keyboard.add_button('Студент', payload={'menu': const.MENU_CHOOSE_ROLE, 'role': const.ROLE_STUDENT})
+        keyboard.add_button('Студент', payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
+                                                const.PAYLOAD_ROLE: const.ROLE_STUDENT})
         keyboard.add_line()
-        keyboard.add_button('Преподователь', payload={'menu': const.MENU_CHOOSE_ROLE, 'role': const.ROLE_TEACHER})
+        keyboard.add_button('Преподователь', payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
+                                                      const.PAYLOAD_ROLE: const.ROLE_TEACHER})
         return keyboard.get_keyboard()
 
     @staticmethod
@@ -93,12 +95,12 @@ class Keyboards:
                                      const.PAYLOAD_TYPE: const.SETTINGS_TYPE_LOCATION})
         keyboard.add_line()
 
-        if (user.subscription_days is None or user.subscription_days == "CHANGES") and user.current_name:
+        if (user.subscription_days is None or user.subscription_days == const.CHANGES) and user.current_name:
             keyboard.add_button('Подписаться на расписание', color=VkKeyboardColor.DEFAULT,
                                 payload={const.PAYLOAD_MENU: const.MENU_SUBSCRIBE})
             keyboard.add_line()
         else:
-            if user.subscription_days is not None and user.subscription_days != "CHANGES" and user.current_name:
+            if user.subscription_days is not None and user.subscription_days != const.CHANGES and user.current_name:
                 if user.current_name:
                     keyboard.add_button('Изменить подписку на расписание', color=VkKeyboardColor.DEFAULT,
                                         payload={const.PAYLOAD_MENU: const.MENU_SUBSCRIBE})

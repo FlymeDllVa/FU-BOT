@@ -1,4 +1,3 @@
-import urllib.parse
 import vk_api
 import datetime
 
@@ -7,7 +6,6 @@ from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
 from app.utils.server import get_group, get_teacher, format_schedule
 from app.models import User
-from config import CALENDAR_LINK
 import app.utils.constants as const
 import app.utils.strings as strings
 
@@ -154,7 +152,7 @@ class Bot:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
-                message=strings.CANT_FIND_SHEDULE_BY_DATE(date.strftime('%d.%m.%Y')),
+                message=strings.CANT_FIND_SCHEDULE_BY_DATE.format(date.strftime('%d.%m.%Y')),
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return user
@@ -186,7 +184,7 @@ class Bot:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
-                message=strings.GROUP_CHABGED_FOR(group_name),
+                message=strings.GROUP_CHANGED_FOR.format(group_name),
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return user
@@ -229,7 +227,7 @@ class Bot:
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
-                message=strings.GROUP,
+                message=strings.GROUP.format(group_name),
                 keyboard=self.keyboard.find_schedule_menu(user)
             )
             return user
@@ -280,7 +278,7 @@ class Bot:
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
-                    message=strings.FOUND_TEACHER(teachers[0][1]) + '\n' + strings.CHOOSE_TIMEDELTA,
+                    message=strings.FOUND_TEACHER.format(teachers[0][1]) + '\n' + strings.CHOOSE_TIMEDELTA,
                     keyboard=self.keyboard.find_schedule_menu(user)
                 )
             else:
@@ -323,7 +321,7 @@ class Bot:
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
-                    message=strings.FOUND_TEACHER(teachers[0][1]) + '\n' + strings.CHOOSE_TIMEDELTA,
+                    message=strings.FOUND_TEACHER.format(teachers[0][1]) + '\n' + strings.CHOOSE_TIMEDELTA,
                     keyboard=self.keyboard.schedule_menu(user)
                 )
             else:
@@ -350,7 +348,7 @@ class Bot:
         self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
-            message=strings.FOUND_TEACHER(payload[const.PAYLOAD_FOUND_NAME]),
+            message=strings.FOUND_TEACHER.format(payload[const.PAYLOAD_FOUND_NAME]),
             keyboard=self.keyboard.schedule_menu(user)
         )
 
