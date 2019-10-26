@@ -1,6 +1,5 @@
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from app.models import User
-from config import *
 import app.utils.constants as const
 
 

@@ -12,5 +12,5 @@ class Config:
     SQLALCHEMY_DATABASE_URI = f"postgresql://postgres:postgres@localhost:5432/bot"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DB_SETTINGS = {}
-    # DB_SETTINGS = {pool_recycle:600} # MySQL
-    # DB_SETTINGS = {pool_size:30, max_overflow:10} # PostgeSQL
+    # DB_SETTINGS = {'pool_recycle': 600} # MySQL
+    # DB_SETTINGS = {'pool_size': 30, 'max_overflow': 10} # PostgeSQL

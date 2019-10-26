@@ -1,9 +1,12 @@
 import threading
 import json
+import logging
 
 from vk_api.bot_longpoll import VkBotEventType
 from app.models import User
 import app.utils.constants as const
+
+logger = logging.getLogger(__name__)
 
 
 def vk_bot_main(bot):
@@ -22,7 +25,7 @@ def vk_bot_main(bot):
                 flow = threading.Thread(target=vk_bot_from_chat, args=(bot, event,))
                 flow.start()
             else:
-                print(event)
+                logger.warning('unexpected event in bot - %s', event)
 
 
 def vk_bot_from_user(bot, event):
@@ -43,47 +46,10 @@ def vk_bot_from_user(bot, event):
         bot.send_schedule_menu(user)
     elif const.PAYLOAD_MENU in payload:
         menu = payload[const.PAYLOAD_MENU]
-        if menu == const.MENU_MAIN:
-            bot.send_schedule_menu(user)
-        elif menu == const.MENU_SCHEDULE:
-            bot.send_schedule_menu(user)
-        elif menu == const.MENU_SCHEDULE_SHOW:
-            bot.send_schedule(user, start_day=payload[const.PAYLOAD_START_DAY], days=payload[const.PAYLOAD_DAYS])
-        elif menu == const.MENU_SCHEDULE_SHOW_ONE:
-            bot.send_one_day_schedule(user)
-        elif menu == const.MENU_SEARCH_TEACHER:
-            bot.send_search_teacher(user)
-        elif menu == const.MENU_TEACHER:
-            bot.send_teacher(user, payload)
-        elif menu == const.MENU_SCHEDULE_FOUND:
-            bot.send_teacher_schedule(user, start_day=payload[const.PAYLOAD_START_DAY],
-                                      days=payload[const.PAYLOAD_DAYS])
-        elif menu == const.MENU_SETTINGS:
-            bot.send_settings_menu(user)
-        elif menu == const.MENU_SET_SETTINGS:
-            bot.show_groups_or_location(user, payload[const.PAYLOAD_TYPE])
-        elif menu == const.MENU_CHANGE_GROUP:
-            bot.send_choice_group(user)
-        elif menu == const.MENU_SUBSCRIBE:
-            bot.subscribe_schedule(user)
-        elif menu == const.MENU_UNSUBSCRIBE:
-            bot.unsubscribe_schedule(user)
-        elif menu == const.MENU_UPDATE_SUBSCRIPTION:
-            bot.update_subscribe_day(user, payload[const.PAYLOAD_TYPE])
-        elif menu == const.MENU_CANCEL:
-            user.cancel_changes()
-            bot.send_schedule_menu(user)
-        elif menu == const.MENU_CHOOSE_ROLE:
-            bot.set_role(user, payload[const.PAYLOAD_ROLE])
-        elif menu == const.MENU_GET_CALENDAR:
-            bot.send_calendar(user, payload["army"])
-        elif menu == const.MENU_SET_TEACHER:
-            bot.set_teacher(user, payload)
-        elif menu == const.MENU_SEARCH:
-            bot.search(user)
-        elif menu == const.MENU_SEARCH_GROUP:
-            bot.search_group(user)
+        if menu in dir(bot):
+            getattr(bot, menu)(user, payload=payload)
         else:
+            logger.warning('unexpected payload %s , user %s', payload, user.id)
             bot.send_schedule_menu(user)
     elif const.PAYLOAD_MENU not in payload:
         if user.current_name == const.CHANGES:
@@ -101,6 +67,7 @@ def vk_bot_from_user(bot, event):
         elif user.schedule_day_date == const.CHANGES:
             bot.send_day_schedule(user, message_lower)
         elif message == "📅":
+            logger.info('%s asked for calendar for group %s', user.id, user.current_name)
             bot.chose_calendar(user)
         else:
             bot.send_schedule_menu(user)
@@ -108,7 +75,7 @@ def vk_bot_from_user(bot, event):
 
 def vk_bot_answer_unread(bot):
     unread = bot.vk.messages.getConversations(filter='unread', count=25)
-
+    logger.info('Answering %s unread messages', unread.get('unread_count', 0))
     for conversation in unread['items']:
         # -- Если вдруг понадобится --
         # payload = json.loads(conversation['last_message']['payload']) if 'payload' in conversation[
@@ -118,7 +85,8 @@ def vk_bot_answer_unread(bot):
             # TODO решить что писать людям
             user = User.search_user(user)
             bot.send_schedule_menu(user)
-        except Exception:
+        except Exception as e:
+            logger.warning('Exception in unread: user %s for %s', user, e)
             bot.vk.messages.markAsRead(peer_id=user)
 
 

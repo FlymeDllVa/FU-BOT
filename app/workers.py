@@ -1,11 +1,14 @@
 import schedule
 import time
+import logging
 
 from threading import Thread
 
 from app.bot import vk_bot_main, vk_bot_answer_unread
 from app.utils.vk import *
 from config import *
+
+logger = logging.getLogger(__name__)
 
 
 def start_bot():
@@ -22,6 +25,7 @@ def start_bot():
         try:
             vk_bot_main(bot)
         except Exception as error:
+            logger.warning('Exception in bot thread: %s', error)
             print("ОШИБКА", error)
             time.sleep(1)
 

@@ -2,8 +2,6 @@ import requests
 import datetime
 from urllib.parse import quote
 
-from config import *
-
 
 class Data:
     """
