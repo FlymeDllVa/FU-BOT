@@ -1,24 +1,28 @@
 from app import db, session
 from sqlalchemy import Integer, String, Column, Boolean
+from app.utils.constants import CHANGES
 
 
 class User(db):
-    __tablename__ = "users"
+    __tablename__ = "vk_users"
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
-    update = Column(String, default="1.0")
-    group_name = Column(String, default=None)
-    schedule_day_date = Column(String, default=None)
-    found_teacher_id = Column(Integer, default=None)
-    found_teacher_name = Column(String, default=None)
-    subscription_time = Column(String, default=None)
-    subscription_days = Column(String, default=None)
-    subscription_group = Column(String, default=None)
+    role = Column(String(256), default=None)
+    update = Column(String(256), default="1.0")
+    current_name = Column(String(256), default=None)
+    current_id = Column(Integer, default=None)
+    schedule_day_date = Column(String(256), default=None)
+    found_id = Column(Integer, default=None)
+    found_name = Column(String(256), default=None)
+    found_type = Column(String(256), default=None)
+    subscription_time = Column(String(256), default=None)
+    subscription_days = Column(String(256), default=None)
+    subscription_group = Column(String(256), default=None)
     show_location = Column(Boolean, default=False)
     show_groups = Column(Boolean, default=False)
 
     @classmethod
-    def filter_by_time(cls, time):
+    def filter_by_time(cls, time: str) -> list:
         """
         Ищет всех пользователей с временем подписки time
 
@@ -62,12 +66,13 @@ class User(db):
         return user
 
     def cancel_changes(self):
-        if self.group_name == "CHANGES":
-            self.group_name = None
-        elif self.found_teacher_name == "CHANGES" and self.found_teacher_id == 0:
-            self.found_teacher_name = None
-        elif self.subscription_days == "CHANGES":
+        if self.current_name == CHANGES:
+            self.current_name = None
+        elif self.found_name == CHANGES and self.found_id == 0:
+            self.found_name = None
+            self.found_type = None
+        elif self.subscription_days == CHANGES:
             self.subscription_days = None
-        elif self.schedule_day_date == "CHANGES":
+        elif self.schedule_day_date == CHANGES:
             self.schedule_day_date = None
         session.commit()

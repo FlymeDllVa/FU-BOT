@@ -1,8 +1,12 @@
 import threading
 import json
+import logging
 
 from vk_api.bot_longpoll import VkBotEventType
 from app.models import User
+import app.utils.constants as const
+
+logger = logging.getLogger(__name__)
 
 
 def vk_bot_main(bot):
@@ -21,7 +25,7 @@ def vk_bot_main(bot):
                 flow = threading.Thread(target=vk_bot_from_chat, args=(bot, event,))
                 flow.start()
             else:
-                print(event)
+                logger.warning('unexpected event in bot - %s', event)
 
 
 def vk_bot_from_user(bot, event):
@@ -39,62 +43,39 @@ def vk_bot_from_user(bot, event):
     message_lower = message.lower()
 
     if message_lower == ("начать" or "start" or "сброс") or payload.get('command', '') == 'start':
-        bot.send_main_menu(user)
-    elif "menu" in payload:
-        menu = payload["menu"]
-        if menu == "main":
-            bot.send_main_menu(user)
-        elif menu == "schedule":
-            bot.send_schedule_menu(user)
-        elif menu == "schedule_show":
-            bot.send_schedule(user, start_day=payload["start_day"], days=payload["days"])
-        elif menu == "schedule_one_day":
-            bot.send_one_day_schedule(user)
-        elif menu == "search_teacher":
-            bot.send_search_teacher(user)
-        elif menu == "teachers":
-            bot.send_teacher(user, payload)
-        elif menu == "teacher_schedule_show":
-            bot.send_teacher_schedule(user, start_day=payload["start_day"], days=payload["days"])
-        elif menu == "settings":
-            bot.send_settings_menu(user)
-        elif menu == "show_groups" or menu == "show_location":
-            bot.show_groups_or_location(user, payload["menu"])
-        elif menu == "change_group":
-            bot.send_choice_group(user)
-        elif menu == "subscribe_to_newsletter":
-            bot.subscribe_schedule(user)
-        elif menu == "unsubscribe_to_newsletter":
-            bot.unsubscribe_schedule(user)
-        elif menu in ("subscribe_to_newsletter_today", "subscribe_to_newsletter_tomorrow",
-                      "subscribe_to_newsletter_today_and_tomorrow", "subscribe_to_newsletter_this_week",
-                      "subscribe_to_newsletter_next_week"):
-            bot.update_subscribe_day(user, menu)
-        elif menu == "cancel":
-            user.cancel_changes()
-            bot.send_schedule_menu(user)
-        elif menu == "get_calendar":
-            bot.send_calendar(user, payload["army"])
+        bot.send_schedule_menu(user)
+    elif const.PAYLOAD_MENU in payload:
+        menu = payload[const.PAYLOAD_MENU]
+        if menu in const.MENUS_LIST:
+            getattr(bot, menu)(user, payload=payload)
         else:
-            bot.send_main_menu(user)
-    elif "menu" not in payload:
-        if user.group_name == "CHANGES":
-            bot.send_check_group(user, message_lower)
-        elif user.found_teacher_name == "CHANGES" and user.found_teacher_id == 0:
-            bot.search_teacher_schedule(user, message_lower)
-        elif user.subscription_days == "CHANGES":
+            logger.warning('unexpected payload %s , user %s', payload, user.id)
+            bot.send_schedule_menu(user)
+    elif const.PAYLOAD_MENU not in payload:
+        if user.current_name == const.CHANGES:
+            if user.role == const.ROLE_STUDENT:
+                bot.send_check_group(user, message_lower)
+            else:
+                bot.search_teacher_to_set(user, message_lower)
+        elif user.found_name == const.CHANGES and user.found_id == 0:
+            if user.found_type == const.ROLE_TEACHER:
+                bot.search_teacher_schedule(user, message_lower)
+            else:
+                bot.search_check_group(user, message_lower)
+        elif user.subscription_days == const.CHANGES:
             bot.update_subscribe_time(user, message_lower)
-        elif user.schedule_day_date == "CHANGES":
+        elif user.schedule_day_date == const.CHANGES:
             bot.send_day_schedule(user, message_lower)
         elif message == "📅":
+            logger.info('%s asked for calendar for group %s', user.id, user.current_name)
             bot.chose_calendar(user)
         else:
-            bot.send_main_menu(user)
+            bot.send_schedule_menu(user)
 
 
 def vk_bot_answer_unread(bot):
     unread = bot.vk.messages.getConversations(filter='unread', count=25)
-
+    logger.info('Answering %s unread messages', unread.get('unread_count', 0))
     for conversation in unread['items']:
         # -- Если вдруг понадобится --
         # payload = json.loads(conversation['last_message']['payload']) if 'payload' in conversation[
@@ -103,8 +84,9 @@ def vk_bot_answer_unread(bot):
         try:
             # TODO решить что писать людям
             user = User.search_user(user)
-            bot.send_main_menu(user)
-        except Exception:
+            bot.send_schedule_menu(user)
+        except Exception as e:
+            logger.warning('Exception in unread: user %s for %s', user, e)
             bot.vk.messages.markAsRead(peer_id=user)
 
 

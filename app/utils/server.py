@@ -1,7 +1,6 @@
 import requests
 import datetime
-
-from config import *
+from urllib.parse import quote
 
 
 class Data:
@@ -39,104 +38,62 @@ def get_group(group_name: str) -> Data:
     Запрашивает группу у сервера
 
     :param group_name:
-    :return:
+    :return: id группы в Data
     """
-
-    session = requests.session()
     try:
-        request = session.post(f"{SERVER_URL}api/v1/group", json={"group_name": group_name}, timeout=2)
+        request = requests.get(f"http://ruz.fa.ru/api/search?term={quote(group_name)}&type=group", timeout=2)
     except requests.exceptions.ReadTimeout:
         return Data.error('Timeout error')
-    if request.status_code == 523:
-        return Data.error('Connection error')
-    elif request.status_code == 500:
-        return Data.error('Server error')
-    elif request.status_code == 400:
+    found_group = request.json()
+    if found_group and found_group[0]['label'].strip().upper() == group_name:
+        return Data(found_group[0]['id'])
+    else:
         return Data.error('Not found')
-    elif request.status_code == 426:
-        return Data.error('Refreshes')
-    elif not request.status_code == 200:
-        return Data.error('Error')
+
+
+def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
+    """
+    Запрашивает расписание у сервера
+
+    :param id:
+    :param date_start:
+    :param date_end:
+    :param type: 'group' 'lecturer'
+    :return: {'dd.mm.yyyy': {'time_start': , 'time_end': , 'name': , 'type': , 'groups': , 'audience': , 'location': ,
+                             'teachers_name': }}
+    """
+    if not date_start:
+        date_start = datetime.datetime.today()
+    if not date_end:
+        date_end = datetime.datetime.today() + datetime.timedelta(days=1)
+    request = requests.get(f"http://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}&"
+                           f"finish={date_end.strftime('%Y.%m.%d')}&lng=1")
     request_json = request.json()
-    if "data" in request_json:
-        return Data(request_json["data"])
-    else:
-        return Data.error('Connection error')
+    if 'error' in request_json:
+        return Data.error(request_json['error'])
+    res = {}
+    for i in request_json:
+        res.setdefault(datetime.datetime.strptime(i['date'], '%Y.%m.%d').strftime('%d.%m.%Y'), []).append(
+            dict(time_start=i['beginLesson'], time_end=i['endLesson'], name=i['discipline'], type=i['kindOfWork'],
+                 groups=i['stream'], audience=i['auditorium'], location=i['building'], teachers_name=i['lecturer']
+                 )
+        )
+    return Data({key: sorted(value, key=lambda x: x['time_start']) for key, value in res.items()})
 
 
-def get_schedule(group_name: str, date: datetime = None) -> dict or None:
+def get_teacher(teacher_name: str) -> list or None:
     """
-    Запрашивает расписание у сервера
-
-    :param date:
-    :param group_name:
-    :return:
-    """
-    session = requests.session()
-    if date is None:
-        json_obj = {"group_name": group_name}
-    elif date:
-        json_obj = {"group_name": group_name, "date": date.strftime('%d.%m.%Y')}
-    else:
-        return None
-    try:
-        request = session.post(f"{SERVER_URL}api/v1/schedule/group", json=json_obj, timeout=5)
-    except requests.exceptions.ReadTimeout:
-        return None
-    if request.status_code == 523:
-        return 'Connection error'
-    elif request.status_code == 500:
-        return 'Server error'
-    elif request.status_code == 400:
-        return 'Not found'
-    elif request.status_code == 426:
-        return 'Refreshes'
-    elif not request.status_code == 200:
-        return 'Error'
-    if not request.status_code == 200:
-        return None
-    return request.json()
-
-
-def get_teacher_schedule(teacher: dict) -> dict or None:
-    """
-    Запрашивает расписание преподавателя у сервера
-
-    :param teacher:
-    :return:
-    """
-
-    session = requests.session()
-    try:
-        request = session.post(f"{SERVER_URL}api/v1/schedule/teacher",
-                               json={"id": teacher['id'], "name": teacher['name']}, timeout=10)
-    except requests.exceptions.ReadTimeout:
-        return None
-    if not request.status_code == 200:
-        return None
-    return request.json()
-
-
-def get_teacher(teacher_name: str) -> dict or None:
-    """
-    Запрашивает расписание у сервера
+    Поиск преподователя
 
     :param teacher_name:
-    :return:
+    :return: [(id, name), ...]
     """
-
-    session = requests.session()
     try:
-        request = session.post(f"{SERVER_URL}api/v1/teacher", json={"name": teacher_name}, timeout=5)
+        request = requests.get(f"http://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=lecturer", timeout=2)
     except requests.exceptions.ReadTimeout:
-        return "timeout"
-    if not request.status_code == 200:
-        return None
-    request = request.json()
-    if request['data'] is not None:
-        if len(request['data']) > 0:
-            return request['data']
-    return None
+        return Data.error('Timeout error')
+    teachers = [(i['id'], i['label']) for i in request.json() if i['id']]
+    return Data(teachers)
 
 
 def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = None, date: datetime = None,
@@ -144,27 +101,29 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
     """
     Форматирует расписание к виду который отправляет бот
 
-    :param text:
-    :param date:
-    :param teacher:
-    :param start_day:
+    :param text: начальная строка, к которой прибавляется расписание
+    :param start_day: начальная дата в количестве дней от сейчас
+    :param days: количество дней
+    :param date: дата для расписания на любой один день
+    :param teacher: id преподователя
     :param user:
-    :param days:
-    :return:
+    :return: строку расписания
     """
-
-    if teacher is not None:
-        schedule = get_teacher_schedule(teacher)
-    elif date is not None:
-        schedule = get_schedule(user.group_name, date)
+    if date is None:
+        date_start = datetime.datetime.now() + datetime.timedelta(days=start_day)
+        date_end = date_start + datetime.timedelta(days=days)
     else:
-        schedule = get_schedule(user.group_name)
-        if schedule in ('Connection error', 'Server error', 'Not found', 'Refreshes', 'Error'):
-            return schedule
-    if schedule is None:
+        date_start = date
+        date_end = date
+    if teacher is not None:
+        schedule = get_schedule(teacher['id'], date_start, date_end,
+                                type='lecturer' if teacher['type'] == 'teacher' else 'group')
+    else:
+        schedule = get_schedule(user.current_id, date_start, date_end)
+    if schedule.has_error:
         return None
     else:
-        schedule = schedule["data"]
+        schedule = schedule.data
     if date is None:
         date = datetime.datetime.today()
         date += datetime.timedelta(days=start_day)
@@ -177,7 +136,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                 text += f"{lesson['name']}\n"
                 if lesson['type']:
                     text += f"{lesson['type']}\n"
-                if teacher is not None or user.show_groups is True:
+                if (teacher is not None or user.show_groups) and lesson['groups']:
                     if len(lesson['groups'].split(', ')) > 1:
                         text += "Группы: "
                     else:
@@ -187,7 +146,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                     if lesson['audience']:
                         text += f"Кабинет: {lesson['audience']}, "
                     text += f"{lesson['location']}"
-                if user.group_name is not None and teacher is None:
+                if user.current_name is not None and teacher is None:
                     if lesson['audience']:
                         text += f"Где: {lesson['audience']}"
                     if user.show_location is True and lesson['location'] is not None:
@@ -195,9 +154,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                     else:
                         text += "\n"
                     if "teachers_name" in lesson:
-                        teachers = ", ".join(lesson['teachers_name'])
-                        if teachers:
-                            text += f"Кто: {teachers}"
+                        text += f"Кто: {lesson['teachers_name']}"
                 text += "\n"
         else:
             text += f"Нет пар\n"
