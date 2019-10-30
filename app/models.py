@@ -1,9 +1,10 @@
 from app import db, session
 from sqlalchemy import Integer, String, Column, Boolean
+from app.utils.constants import CHANGES
 
 
 class User(db):
-    __tablename__ = "users"
+    __tablename__ = "vk_users"
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
     role = Column(String(256), default=None)
@@ -21,7 +22,7 @@ class User(db):
     show_groups = Column(Boolean, default=False)
 
     @classmethod
-    def filter_by_time(cls, time):
+    def filter_by_time(cls, time: str) -> list:
         """
         Ищет всех пользователей с временем подписки time
 
@@ -65,13 +66,13 @@ class User(db):
         return user
 
     def cancel_changes(self):
-        if self.current_name == "CHANGES":
+        if self.current_name == CHANGES:
             self.current_name = None
-        elif self.found_name == "CHANGES" and self.found_id == 0:
+        elif self.found_name == CHANGES and self.found_id == 0:
             self.found_name = None
             self.found_type = None
-        elif self.subscription_days == "CHANGES":
+        elif self.subscription_days == CHANGES:
             self.subscription_days = None
-        elif self.schedule_day_date == "CHANGES":
+        elif self.schedule_day_date == CHANGES:
             self.schedule_day_date = None
         session.commit()

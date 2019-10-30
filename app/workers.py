@@ -4,9 +4,11 @@ import logging
 
 from threading import Thread
 
-from app.bot import vk_bot_main, vk_bot_answer_unread
-from app.utils.vk import *
+from .bot import vk_bot_main, vk_bot_answer_unread
+from .models import User
+from .utils.vk import Bot
 from config import *
+from .utils import constants as const
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +41,16 @@ def schedule_distribution(bot):
     """
 
     for user in User.filter_by_time(time.strftime("%H:%M", time.localtime())):
-        if user.subscription_days is not None and user.subscription_days != "CHANGES":
-            if user.subscription_days == "today":
+        if user.subscription_days is not None and user.subscription_days != const.CHANGES:
+            if user.subscription_days == const.SUBSCRIPTION_TODAY:
                 bot.send_schedule(user, days=1, text="Ваше расписание на сегодня\n")
-            elif user.subscription_days == "tomorrow":
+            elif user.subscription_days == const.SUBSCRIPTION_TOMORROW:
                 bot.send_schedule(user, start_day=1, days=1, text="Ваше расписание на завтра\n")
-            elif user.subscription_days == "today_and_tomorrow":
+            elif user.subscription_days == const.SUBSCRIPTION_TODAY_TOMORROW:
                 bot.send_schedule(user, days=2, text="Ваше расписание на сегодня и завтра\n\n")
-            elif user.subscription_days == "this_week":
+            elif user.subscription_days == const.SUBSCRIPTION_WEEK:
                 bot.send_schedule(user, days=7, text="Ваше расписание на 7 дней\n\n")
-            elif user.subscription_days == "next_week":
+            elif user.subscription_days == const.SUBSCRIPTION_NEXT_WEEK:
                 bot.send_schedule(user, start_day=7, days=7, text="Ваше расписание на следующую неделю\n\n")
 
 

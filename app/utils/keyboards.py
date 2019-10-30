@@ -226,3 +226,9 @@ class Keyboards:
         keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
 
         return keyboard.get_keyboard()
+
+    @staticmethod
+    def back_to_choosing_role():
+        keyboard = VkKeyboard()
+        keyboard.add_button('Назад', payload={const.PAYLOAD_MENU: const.MENU_CHANGE_GROUP})
+        return keyboard.get_keyboard()

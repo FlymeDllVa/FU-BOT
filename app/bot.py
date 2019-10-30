@@ -46,7 +46,7 @@ def vk_bot_from_user(bot, event):
         bot.send_schedule_menu(user)
     elif const.PAYLOAD_MENU in payload:
         menu = payload[const.PAYLOAD_MENU]
-        if menu in dir(bot):
+        if menu in const.MENUS_LIST:
             getattr(bot, menu)(user, payload=payload)
         else:
             logger.warning('unexpected payload %s , user %s', payload, user.id)

@@ -73,7 +73,7 @@ class Bot:
             start_day = 7 - datetime.datetime.now().isoweekday() + 1
         schedule = format_schedule(user, start_day=start_day, days=days, text=text)
         if schedule == "'Connection error'":
-            logging.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
+            logger.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -95,7 +95,7 @@ class Bot:
             )
             return None
         elif schedule == "Error":
-            logging.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
+            logger.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -104,7 +104,7 @@ class Bot:
             )
             return None
         elif schedule is None:
-            logging.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
+            logger.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -199,28 +199,25 @@ class Bot:
             )
             return user
         else:
-            user = User.update_user(user, data=dict(current_name=None))
-            self.send_group_error(user, group_name, group.error_text)
-
-    def send_group_error(self, user: User, group_name: str, error: str):
-        logging.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
-        if error == "Timeout error":
-            # group = get_group(group_name)
-            self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message=f"Не удалось сменить группу. Попробуйте позже",
-                keyboard=self.keyboard.schedule_menu(user)
-            )
-        elif error == "Not found":
-            user = User.update_user(user, data=dict(current_name=None))
-            self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message=f"Группа «{group_name}» не существует",
-                keyboard=self.keyboard.schedule_menu(user)
-            )
-            return user
+            user = User.update_user(user, data=dict(current_name=const.CHANGES))
+            logger.warning('Error setting group: user %s for %s', user.id, group_name)
+            if group.error_text == "Timeout error":
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=f"Не удалось сменить группу. Попробуйте позже",
+                    keyboard=self.keyboard.back_to_choosing_role()
+                )
+            elif group.error_text == "Not found":
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=strings.GROUP_NOT_FOUND.format(group_name),
+                    keyboard=self.keyboard.back_to_choosing_role()
+                )
+                return user
+            else:
+                logger.warning('Unknown error in setting group: user %s for %s', user.id, group_name)
 
     def search_check_group(self, user: User, group_name: str) -> None or User:
         """
@@ -244,7 +241,22 @@ class Bot:
             return user
         else:
             user = User.update_user(user, data=dict(found_name=None))
-            self.send_group_error(user, group_name, group.error_text)
+            logger.warning('Error getting schedule: user %s for %s', user.id, group_name)
+            if group.error_text == "Timeout error":
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=f"Не удалось найти группу. Попробуйте позже",
+                    keyboard=self.keyboard.schedule_menu(user)
+                )
+            elif group.error_text == "Not found":
+                self.vk.messages.send(
+                    peer_id=user.id,
+                    random_id=get_random_id(),
+                    message=strings.GROUP_NOT_FOUND.format(group_name),
+                    keyboard=self.keyboard.schedule_menu(user)
+                )
+                return user
 
     """
     Поиск преподавателя
@@ -276,7 +288,7 @@ class Bot:
         )
         teachers = get_teacher(teacher_name)
         if teachers.has_error:
-            logging.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
+            logger.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -320,12 +332,12 @@ class Bot:
         # )
         teachers = get_teacher(teacher_name)
         if teachers.has_error:
-            logging.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
+            logger.warning('Error getting schedule: user %s for %s', user.id, teacher_name)
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message="Не удалось подключиться к информационно образовательному порталу. Попробуйте позже",
-                keyboard=self.keyboard.schedule_menu(user)
+                keyboard=self.keyboard.back_to_choosing_role()
             )
         elif teachers.data:
             teachers = teachers.data
@@ -335,7 +347,7 @@ class Bot:
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
-                    message=strings.FOUND_TEACHER.format(teachers[0][1]) + '\n' + strings.CHOOSE_TIMEDELTA,
+                    message=strings.FOUND_TEACHER.format(teachers[0][1]),
                     keyboard=self.keyboard.schedule_menu(user)
                 )
             else:
@@ -347,12 +359,12 @@ class Bot:
                 )
                 return user
         else:
-            User.update_user(user=user, data=dict(found_id=None, found_name=None, found_type=None))
+            # User.update_user(user=user, data=dict(current_id=))
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.TEACHER_NOT_FOUND,
-                keyboard=self.keyboard.schedule_menu(user)
+                keyboard=self.keyboard.back_to_choosing_role()
             )
             return None
 
@@ -607,7 +619,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=message,
-            keyboard=self.keyboard.empty_keyboard()
+            keyboard=self.keyboard.back_to_choosing_role()
         )
         User.update_user(user=user, data=dict(current_name=const.CHANGES, role=role))
         return user
