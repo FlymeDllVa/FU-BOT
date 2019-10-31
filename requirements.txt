@@ -1,0 +1,6 @@
+mysqlclient
+requests
+schedule
+SQLAlchemy
+urllib3
+vk-api
