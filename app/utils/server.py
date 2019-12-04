@@ -96,7 +96,7 @@ def get_teacher(teacher_name: str) -> list or None:
     return Data(teachers)
 
 
-def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = None, date: datetime = None,
+def format_schedule(user, start_day: int = 0, days: int = 1, search: dict = None, date: datetime = None,
                     text: str = "") -> str or None:
     """
     Форматирует расписание к виду который отправляет бот
@@ -115,11 +115,12 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
     else:
         date_start = date
         date_end = date
-    if teacher is not None:
-        schedule = get_schedule(teacher['id'], date_start, date_end,
-                                type='lecturer' if teacher['type'] == 'teacher' else 'group')
+    if search is not None:
+        schedule = get_schedule(search['id'], date_start, date_end,
+                                type='lecturer' if search['type'] == 'teacher' else 'group')
     else:
-        schedule = get_schedule(user.current_id, date_start, date_end)
+        schedule = get_schedule(user.current_id, date_start, date_end,
+                                type='lecturer' if user.role == 'teacher' else 'group')
     if schedule.has_error:
         return None
     else:
@@ -136,17 +137,17 @@ def format_schedule(user, start_day: int = 0, days: int = 1, teacher: dict = Non
                 text += f"{lesson['name']}\n"
                 if lesson['type']:
                     text += f"{lesson['type']}\n"
-                if (teacher is not None or user.show_groups) and lesson['groups']:
+                if (search is not None or user.show_groups) and lesson['groups']:
                     if len(lesson['groups'].split(', ')) > 1:
                         text += "Группы: "
                     else:
                         text += "Группа: "
                     text += f"{lesson['groups']}\n"
-                if teacher is not None:
+                if search is not None:
                     if lesson['audience']:
                         text += f"Кабинет: {lesson['audience']}, "
                     text += f"{lesson['location']}"
-                if user.current_name is not None and teacher is None:
+                if user.current_name is not None and search is None:
                     if lesson['audience']:
                         text += f"Где: {lesson['audience']}"
                     if user.show_location is True and lesson['location'] is not None:

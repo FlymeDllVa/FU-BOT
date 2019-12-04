@@ -414,9 +414,9 @@ class Bot:
         if payload:
             start_day = payload.get(const.PAYLOAD_START_DAY, 0)
             days = payload.get(const.PAYLOAD_DAYS, 0)
-        schedule = format_schedule(user, start_day=start_day, days=days, teacher=dict(id=user.found_id,
-                                                                                      name=user.found_name,
-                                                                                      type=user.found_type))
+        schedule = format_schedule(user, start_day=start_day, days=days, search=dict(id=user.found_id,
+                                                                                     name=user.found_name,
+                                                                                     type=user.found_type))
         User.update_user(user=user, data=dict(found_id=None, found_name=None, found_type=None))
         if schedule is None:
             self.vk.messages.send(
