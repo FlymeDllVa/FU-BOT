@@ -536,10 +536,11 @@ class Bot:
             return user
         user = User.update_user(user=user, data=dict(subscription_time=time,
                                                      subscription_group=user.current_name))
+        schedule_for = 'группы' if user.role == 'student' else 'преподавателя'
         self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
-            message=f"Формируем расписания для группы {user.current_name} в {time}\nВыберите период, на который вы "
+            message=f"Формируем расписания для {schedule_for} {user.current_name} в {time}\nВыберите период, на который вы "
                     f"хотите получать расписание",
             keyboard=self.keyboard.subscribe_to_schedule_day_menu(user)
         )
@@ -578,10 +579,11 @@ class Bot:
             )
             return None
         user = User.update_user(user=user, data=dict(subscription_days=subscription_days))
+        schedule_for = 'группы' if user.role == 'student' else 'преподавателя'
         self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
-            message=f'Вы подписались на раписание группы {user.subscription_group}\nТеперь каждый день в '
+            message=f'Вы подписались на раписание {schedule_for} {user.subscription_group}\nТеперь каждый день в '
                     f'{user.subscription_time} вы будете получать расписание на {day}',
             keyboard=self.keyboard.schedule_menu(user)
         )

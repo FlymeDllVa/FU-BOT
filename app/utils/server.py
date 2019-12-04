@@ -2,6 +2,8 @@ import requests
 import datetime
 from urllib.parse import quote
 
+from app.utils.cache import timed_cache
+
 
 class Data:
     """
@@ -33,6 +35,7 @@ def date_name(date: datetime) -> str:
     return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][date.weekday()]
 
 
+@timed_cache(seconds=10800)
 def get_group(group_name: str) -> Data:
     """
     Запрашивает группу у сервера
@@ -51,10 +54,10 @@ def get_group(group_name: str) -> Data:
         return Data.error('Not found')
 
 
+@timed_cache(seconds=10800)
 def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
     """
     Запрашивает расписание у сервера
-
     :param id:
     :param date_start:
     :param date_end:
@@ -62,25 +65,31 @@ def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None
     :return: {'dd.mm.yyyy': {'time_start': , 'time_end': , 'name': , 'type': , 'groups': , 'audience': , 'location': ,
                              'teachers_name': }}
     """
+
     if not date_start:
         date_start = datetime.datetime.today()
     if not date_end:
         date_end = datetime.datetime.today() + datetime.timedelta(days=1)
-    request = requests.get(f"http://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}&"
-                           f"finish={date_end.strftime('%Y.%m.%d')}&lng=1")
+    url = f"http://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}" \
+          f"&finish={date_end.strftime('%Y.%m.%d')}&lng=1"
+    request = requests.get(url)
     request_json = request.json()
-    if 'error' in request_json:
-        return Data.error(request_json['error'])
+    if not request_json:
+        return Data.error('Not found')
     res = {}
     for i in request_json:
+        i['auditorium'] = i['auditorium'].replace('_', '-')  # FIXME Ждем конечные данные RUZ, а пока так :)
         res.setdefault(datetime.datetime.strptime(i['date'], '%Y.%m.%d').strftime('%d.%m.%Y'), []).append(
             dict(time_start=i['beginLesson'], time_end=i['endLesson'], name=i['discipline'], type=i['kindOfWork'],
-                 groups=i['stream'], audience=i['auditorium'], location=i['building'], teachers_name=i['lecturer']
+                 groups=i['stream'], group=i['group'], audience=i['auditorium'], location=i['building'],
+                 teachers_name=i['lecturer']
                  )
         )
+
     return Data({key: sorted(value, key=lambda x: x['time_start']) for key, value in res.items()})
 
 
+@timed_cache(seconds=10800)
 def get_teacher(teacher_name: str) -> list or None:
     """
     Поиск преподователя
@@ -105,7 +114,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, search: dict = None
     :param start_day: начальная дата в количестве дней от сейчас
     :param days: количество дней
     :param date: дата для расписания на любой один день
-    :param teacher: id преподователя
+    :param search: запрос для поиска
     :param user:
     :return: строку расписания
     """
@@ -137,12 +146,14 @@ def format_schedule(user, start_day: int = 0, days: int = 1, search: dict = None
                 text += f"{lesson['name']}\n"
                 if lesson['type']:
                     text += f"{lesson['type']}\n"
-                if (search is not None or user.show_groups) and lesson['groups']:
-                    if len(lesson['groups'].split(', ')) > 1:
+                if (search is not None or user.show_groups) and (lesson['groups'] or lesson['group']):
+                    if lesson['groups']:
                         text += "Группы: "
+                        text += f"{lesson['groups'].strip().replace(', ', ',').replace(',', ', ')}\n"
                     else:
-                        text += "Группа: "
-                    text += f"{lesson['groups']}\n"
+                        if lesson['group']:
+                            text += "Группа: "
+                            text += f"{lesson['group'].strip()}\n"
                 if search is not None:
                     if lesson['audience']:
                         text += f"Кабинет: {lesson['audience']}, "
