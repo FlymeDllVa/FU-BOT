@@ -33,6 +33,23 @@ class Bot:
 
         logger.info('Bot started')
 
+    def send_msg(self, peer_id, message, keyboard=None):
+        if len(message) > 4000:
+            for mess in [message[i: i + 4000] for i in range(0, len(message), 4000)]:
+                self.vk.messages.send(
+                    peer_id=peer_id,
+                    random_id=get_random_id(),
+                    message=mess,
+                    keyboard=keyboard
+                )
+        else:
+            self.vk.messages.send(
+                peer_id=peer_id,
+                random_id=get_random_id(),
+                message=message,
+                keyboard=keyboard
+            )
+
     """
     Меню расписания
     """
@@ -111,9 +128,8 @@ class Bot:
                 message="Не удалось получить расписание",
             )
             return None
-        self.vk.messages.send(
+        self.send_msg(
             peer_id=user.id,
-            random_id=get_random_id(),
             message=schedule,
         )
         return user
@@ -166,9 +182,8 @@ class Bot:
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return user
-        self.vk.messages.send(
+        self.send_msg(
             peer_id=user.id,
-            random_id=get_random_id(),
             message=schedule,
             keyboard=self.keyboard.schedule_menu(user)
         )
@@ -426,9 +441,8 @@ class Bot:
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return None
-        self.vk.messages.send(
+        self.send_msg(
             peer_id=user.id,
-            random_id=get_random_id(),
             message=schedule,
             keyboard=self.keyboard.schedule_menu(user)
         )
