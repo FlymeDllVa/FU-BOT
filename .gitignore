@@ -1,9 +1,9 @@
 .idea/*
 .vscode/*
-__pycache__/*
+#__pycache__/*
 migrations/*
 *.pyc
-.DS_Store
+#.DS_Store
 config.py
 app/routes.py
 groups.json

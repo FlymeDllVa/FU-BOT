@@ -1,4 +1,5 @@
-mysqlclient
+marshmallow
+mysql-connector-python
 requests
 schedule
 SQLAlchemy

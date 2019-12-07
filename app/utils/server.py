@@ -1,8 +1,16 @@
-import requests
+import logging
 import datetime
 from urllib.parse import quote
 
+from marshmallow import ValidationError
+import requests
+
+from app.ruz.schemas import ScheduleSchema
 from app.utils.cache import timed_cache
+
+SCHEDULE_SCHEMA = ScheduleSchema()
+
+log = logging.getLogger(__name__)
 
 
 class Data:
@@ -72,21 +80,17 @@ def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None
         date_end = datetime.datetime.today() + datetime.timedelta(days=1)
     url = f"http://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}" \
           f"&finish={date_end.strftime('%Y.%m.%d')}&lng=1"
-    request = requests.get(url)
+    try:
+        request = requests.get(url)
+    except TimeoutError:
+        return Data.error('Timeout error')
     request_json = request.json()
-    # if not request_json:
-    #     return Data.error('Not found')
-    res = {}
-    for i in request_json:
-        i['auditorium'] = i['auditorium'].replace('_', '-')  # FIXME Ждем конечные данные RUZ, а пока так :)
-        res.setdefault(datetime.datetime.strptime(i['date'], '%Y.%m.%d').strftime('%d.%m.%Y'), []).append(
-            dict(time_start=i['beginLesson'], time_end=i['endLesson'], name=i['discipline'], type=i['kindOfWork'],
-                 groups=i['stream'], group=i['group'], audience=i['auditorium'], location=i['building'],
-                 teachers_name=i['lecturer']
-                 )
-        )
-
-    return Data({key: sorted(value, key=lambda x: x['time_start']) for key, value in res.items()})
+    try:
+        res = SCHEDULE_SCHEMA.load({'pairs': request_json})
+        return Data(res)
+    except ValidationError as e:
+        log.warning('Validation error in get_schedule for %s %s - %r', type, id, e)
+        return Data.error('validation error')
 
 
 @timed_cache(seconds=10800)
@@ -146,14 +150,10 @@ def format_schedule(user, start_day: int = 0, days: int = 1, search: dict = None
                 text += f"{lesson['name']}\n"
                 if lesson['type']:
                     text += f"{lesson['type']}\n"
-                if (search is not None or user.show_groups) and (lesson['groups'] or lesson['group']):
+                if (search is not None or user.show_groups) and lesson['groups']:
                     if lesson['groups']:
                         text += "Группы: "
-                        text += f"{lesson['groups'].strip().replace(', ', ',').replace(',', ', ')}\n"
-                    else:
-                        if lesson['group']:
-                            text += "Группа: "
-                            text += f"{lesson['group'].strip()}\n"
+                        text += f"{', '.join(lesson['groups'])}\n"
                 if search is not None:
                     if lesson['audience']:
                         text += f"Кабинет: {lesson['audience']}, "
