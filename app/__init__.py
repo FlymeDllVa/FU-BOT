@@ -1,26 +1,18 @@
 import logging
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, scoped_session
-from sqlalchemy import create_engine
-
-from config import Config
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-logger_formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-logger_handler = logging.FileHandler(f'{__name__}_logging.log')
-logger_handler.setLevel(logging.INFO)
-logger_handler.setFormatter(logger_formatter)
-logger.addHandler(logger_handler)
-
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, **Config.DB_SETTINGS)
-
-db = declarative_base()
-session = scoped_session(sessionmaker(bind=engine))
+from threading import Thread
 
 from app import models
-from app.workers import *
+from app.workers import start_bot, start_workers
+from app.utils.vk import Bot
+from config import TOKEN, GROUP_ID
 
-# db.metadata.drop_all(engine)
-db.metadata.create_all(engine)
+logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(asctime)-15s - %(message)s')
+log = logging.getLogger(__name__)
+
+
+def start_app():
+    bot = Bot(TOKEN, GROUP_ID)
+    bot_flow = Thread(target=start_bot, args=(bot,))
+    workers_flow = Thread(target=start_workers, args=(bot,))
+    bot_flow.start()
+    workers_flow.start()

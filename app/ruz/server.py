@@ -6,7 +6,7 @@ from marshmallow import ValidationError
 import requests
 
 from app.ruz.schemas import ScheduleSchema
-from app.utils.cache import timed_cache
+from app.ruz.cache import timed_cache
 
 SCHEDULE_SCHEMA = ScheduleSchema()
 

@@ -1,7 +1,4 @@
-import app
+from app import start_app
 
-"""
-Да, оно запускается так
-
-Лел
-"""
+if __name__ == '__main__':
+    start_app()

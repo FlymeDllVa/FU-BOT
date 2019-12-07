@@ -1,7 +1,18 @@
-from app import db, session
-from sqlalchemy import Integer, String, Column, Boolean
-from app.utils.constants import CHANGES
+from sqlalchemy.ext.declarative import declarative_base
 
+from sqlalchemy import Integer, String, Column, Boolean, create_engine
+from sqlalchemy.orm import scoped_session, sessionmaker
+
+from app.utils.constants import CHANGES
+from config import Config
+
+db = declarative_base()
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, **Config.DB_SETTINGS)
+session = scoped_session(sessionmaker(bind=engine))
+
+
+# db.metadata.drop_all(engine)
+# db.metadata.create_all(engine)
 
 class User(db):
     __tablename__ = "vk_users"

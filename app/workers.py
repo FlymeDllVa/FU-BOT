@@ -2,33 +2,29 @@ import schedule
 import time
 import logging
 
-from threading import Thread
-
 from .bot import vk_bot_main, vk_bot_answer_unread
 from .models import User
-from .utils.vk import Bot
-from config import *
 from .utils import constants as const
 
-logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
+schedule_log = logging.getLogger('schedule')
+schedule_log.setLevel(logging.WARNING)
 
 
-def start_bot():
+def start_bot(bot):
     """
     Запускат бота
 
     :return:
     """
-    global bot
-    print(" * BOT started")
+    log.info(" * BOT started")
     # TODO мож в другой поток бахнуть
     vk_bot_answer_unread(bot)
     while True:
         try:
             vk_bot_main(bot)
         except Exception as error:
-            logger.warning('Exception in bot thread: %s', error)
-            print("ОШИБКА", error)
+            log.warning('Exception in bot thread: %s', error)
             time.sleep(1)
 
 
@@ -54,25 +50,14 @@ def schedule_distribution(bot):
                 bot.send_schedule(user, start_day=7, days=7, text="Ваше расписание на следующую неделю\n\n")
 
 
-def start_workers():
+def start_workers(bot):
     """
     Запускает работников
 
     :return:
     """
-    global bot
-    print(" * CRON started")
+    log.info(" * CRON started")
     schedule.every().minute.at(":00").do(schedule_distribution, bot=bot)
     while True:
         schedule.run_pending()
         time.sleep(1)
-
-
-"""
-Run program
-"""
-bot = Bot(TOKEN, GROUP_ID)
-bot_flow = Thread(target=start_bot)
-workers_flow = Thread(target=start_workers)
-bot_flow.start()
-workers_flow.start()

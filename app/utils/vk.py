@@ -5,7 +5,7 @@ import logging
 from app.utils.keyboards import Keyboards
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
-from app.utils.server import get_group, get_teacher, format_schedule
+from app.ruz.server import get_group, get_teacher, format_schedule
 from app.models import User
 import app.utils.constants as const
 import app.utils.strings as strings
