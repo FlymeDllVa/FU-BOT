@@ -54,7 +54,7 @@ def get_group(group_name: str) -> Data:
         return Data.error('Not found')
 
 
-@timed_cache(seconds=10800)
+@timed_cache(seconds=300)
 def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
     """
     Запрашивает расписание у сервера
@@ -74,8 +74,8 @@ def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None
           f"&finish={date_end.strftime('%Y.%m.%d')}&lng=1"
     request = requests.get(url)
     request_json = request.json()
-    if not request_json:
-        return Data.error('Not found')
+    # if not request_json:
+    #     return Data.error('Not found')
     res = {}
     for i in request_json:
         i['auditorium'] = i['auditorium'].replace('_', '-')  # FIXME Ждем конечные данные RUZ, а пока так :)
