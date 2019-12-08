@@ -7,7 +7,7 @@ from app.utils.constants import CHANGES
 from config import Config
 
 db = declarative_base()
-engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, **Config.DB_SETTINGS)
+engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, **Config.SQLALCHEMY_SETTINGS, connect_args=Config.DB_SETTINGS)
 session = scoped_session(sessionmaker(bind=engine))
 
 

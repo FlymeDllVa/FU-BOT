@@ -43,7 +43,7 @@ def date_name(date: datetime) -> str:
     return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][date.weekday()]
 
 
-@timed_cache(seconds=10800)
+@timed_cache(minutes=180)
 def get_group(group_name: str) -> Data:
     """
     Запрашивает группу у сервера
@@ -62,7 +62,6 @@ def get_group(group_name: str) -> Data:
         return Data.error('Not found')
 
 
-@timed_cache(seconds=300)
 def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
     """
     Запрашивает расписание у сервера
@@ -93,7 +92,7 @@ def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None
         return Data.error('validation error')
 
 
-@timed_cache(seconds=10800)
+@timed_cache(minutes=180)
 def get_teacher(teacher_name: str) -> list or None:
     """
     Поиск преподователя
@@ -109,6 +108,7 @@ def get_teacher(teacher_name: str) -> list or None:
     return Data(teachers)
 
 
+@timed_cache(minutes=2)
 def format_schedule(user, start_day: int = 0, days: int = 1, search: dict = None, date: datetime = None,
                     text: str = "") -> str or None:
     """

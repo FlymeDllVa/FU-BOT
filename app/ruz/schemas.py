@@ -52,9 +52,9 @@ class ScheduleSchema(Schema):
                         added = res[pair['date']][time_start]
                         res[pair['date']][time_start].update(
                             dict(
-                                audience=f"{added['audience']}; {pair['audience']}",
+                                audience=f"{added['audience']}, {pair['audience']}",
                                 groups=added['groups'].union(pair['groups']),
-                                teachers_name=f"{added['teachers_name']}; {pair['teachers_name']}"
+                                teachers_name=f"{added['teachers_name']}, {pair['teachers_name']}"
                             ))
                         continue
                 res[pair['date']].update({time_start: pair})

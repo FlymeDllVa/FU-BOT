@@ -3,6 +3,7 @@ import json
 import logging
 
 from vk_api.bot_longpoll import VkBotEventType
+
 from app.models import User
 import app.utils.constants as const
 
