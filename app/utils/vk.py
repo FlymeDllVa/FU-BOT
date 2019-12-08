@@ -614,7 +614,7 @@ class Bot:
                     "\n\nДля Android"
                     "\nВставить адрес календаря в https://calendar.google.com/calendar/r/settings/addbyurl ▶ Открыть "
                     "(скачать) Google Календарь ▶ Настройки ▶ FU Schedule ▶ Синхронизация\n\n\n"
-                    "Ссылка на календарь для подписки: http://null.com 😥",
+                    f"Ссылка на календарь для подписки: https://bot.fa.ru/calendar/{'group' if user.role == 'student' else 'lecturer'}/{user.current_id}",
             keyboard=self.keyboard.schedule_menu(user)
         )
         return user

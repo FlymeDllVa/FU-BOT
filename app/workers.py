@@ -39,9 +39,9 @@ def schedule_distribution(bot):
     for user in User.filter_by_time(time.strftime("%H:%M", time.localtime())):
         if user.subscription_days is not None and user.subscription_days != const.CHANGES:
             if user.subscription_days == const.SUBSCRIPTION_TODAY:
-                bot.send_schedule(user, days=1, text="Ваше расписание на сегодня\n")
+                bot.send_schedule(user, days=1, text="Ваше расписание на сегодня\n\n")
             elif user.subscription_days == const.SUBSCRIPTION_TOMORROW:
-                bot.send_schedule(user, start_day=1, days=1, text="Ваше расписание на завтра\n")
+                bot.send_schedule(user, start_day=1, days=1, text="Ваше расписание на завтра\n\n")
             elif user.subscription_days == const.SUBSCRIPTION_TODAY_TOMORROW:
                 bot.send_schedule(user, days=2, text="Ваше расписание на сегодня и завтра\n\n")
             elif user.subscription_days == const.SUBSCRIPTION_WEEK:
