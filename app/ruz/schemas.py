@@ -51,7 +51,6 @@ class ScheduleSchema(Schema):
                     for save_pair in res[pair['date']]:
                         if save_pair['time_start'] == pair['time_start'] and save_pair['name'] == pair['name']:
                             save_pair['audience'] = f"{save_pair['audience']}, {pair['audience']}"
-                            print(save_pair['groups'].union(pair['groups']))
                             save_pair['groups'] = save_pair['groups'].union(pair['groups'])
                             save_pair['teachers_name'] = f"{save_pair['teachers_name']}, {pair['teachers_name']}"
                             break
