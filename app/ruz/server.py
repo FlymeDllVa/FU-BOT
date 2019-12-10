@@ -62,6 +62,7 @@ def get_group(group_name: str) -> Data:
         return Data.error('Not found')
 
 
+@timed_cache(minutes=2)
 def get_schedule(id: str, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
     """
     Запрашивает расписание у сервера
@@ -108,7 +109,6 @@ def get_teacher(teacher_name: str) -> list or None:
     return Data(teachers)
 
 
-@timed_cache(minutes=2)
 def format_schedule(user, start_day: int = 0, days: int = 1, search: dict = None, date: datetime = None,
                     text: str = "") -> str or None:
     """
