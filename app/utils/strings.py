@@ -25,5 +25,5 @@ ERROR = "Ошибка"
 CANT_FIND_SCHEDULE_BY_DATE = "Не удалось найти расписание на {}"
 GROUP_CHANGED_FOR = "Группа изменена на «{}»"
 GROUP = "Группа «{}»"
-GROUP_NOT_FOUND = 'Группа «{}» не существует'
+GROUP_NOT_FOUND = 'Группа «{}» не существует\n\nПроверьте название группы на http://ruz.fa.ru/ruz'
 FOUND_TEACHER = "Найденный преподаватель: {}"

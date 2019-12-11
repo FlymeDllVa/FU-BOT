@@ -205,7 +205,8 @@ class Bot:
         group_name = group_name.strip().replace(" ", "").upper()
         group = get_group(group_name)
         if group.has_error is False:
-            user = User.update_user(user, data=dict(current_name=group_name, current_id=group.data))
+            user = User.update_user(user, data=dict(current_name=group_name, current_id=group.data, show_location=False,
+                                                    show_groups=False))
             self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -358,7 +359,9 @@ class Bot:
             teachers = teachers.data
             if len(teachers) == 1:
                 user = User.update_user(user=user, data=dict(current_id=teachers[0][0],
-                                                             current_name=teachers[0][1]))
+                                                             current_name=teachers[0][1],
+                                                             show_location=True,
+                                                             show_groups=True))
                 self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
@@ -385,7 +388,10 @@ class Bot:
 
     def set_teacher(self, user, payload: dict = None):
         user = User.update_user(user=user, data=dict(current_id=payload[const.PAYLOAD_FOUND_ID],
-                                                     current_name=payload[const.PAYLOAD_FOUND_NAME]))
+                                                     current_name=payload[const.PAYLOAD_FOUND_NAME],
+                                                     show_location=True,
+                                                     show_groups=True
+                                                     ))
         self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),

@@ -152,7 +152,7 @@ def format_schedule(user, start_day: int = 0, days: int = 1, search: dict = None
                 else:
                     text += f"\n⏱{lesson['time_start']} – {lesson['time_end']}⏱\n"
                     selected_days.add(lesson['time_start'])
-                text += f"*{lesson['name']}*\n"
+                text += f"{lesson['name']}\n"
                 if lesson['type']:
                     text += f"{lesson['type']}\n"
                 if (search is not None or user.show_groups) and lesson['groups']:

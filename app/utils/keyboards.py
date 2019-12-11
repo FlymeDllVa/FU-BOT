@@ -20,7 +20,7 @@ class Keyboards:
         keyboard.add_button('Студент', payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
                                                 const.PAYLOAD_ROLE: const.ROLE_STUDENT})
         keyboard.add_line()
-        keyboard.add_button('Преподователь', payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
+        keyboard.add_button('Преподаватель', payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
                                                       const.PAYLOAD_ROLE: const.ROLE_TEACHER})
         return keyboard.get_keyboard()
 
