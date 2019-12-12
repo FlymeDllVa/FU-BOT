@@ -63,7 +63,7 @@ class Keyboards:
         keyboard.add_line()
         keyboard.add_button('Расписание группы', payload={const.PAYLOAD_MENU: const.MENU_SEARCH_GROUP})
         keyboard.add_line()
-        keyboard.add_button('Расписание преподователя', payload={const.PAYLOAD_MENU: const.MENU_SEARCH_TEACHER})
+        keyboard.add_button('Расписание преподавателя', payload={const.PAYLOAD_MENU: const.MENU_SEARCH_TEACHER})
         keyboard.add_line()
         keyboard.add_button('← Назад', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE})
         return keyboard.get_keyboard()

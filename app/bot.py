@@ -56,8 +56,11 @@ def vk_bot_from_user(bot, event):
         if user.current_name == const.CHANGES:
             if user.role == const.ROLE_STUDENT:
                 bot.send_check_group(user, message_lower)
-            else:
+            elif user.role == const.ROLE_TEACHER:
                 bot.search_teacher_to_set(user, message_lower)
+            else:
+                bot.send_msg(user.id, 'Сделайте выбор кнопками внизу\n\nЕсли кнопки не отображаются - воспользуйтесь '
+                                      'официальным клиентом Вконтакте')
         elif user.found_name == const.CHANGES and user.found_id == 0:
             if user.found_type == const.ROLE_TEACHER:
                 bot.search_teacher_schedule(user, message_lower)
