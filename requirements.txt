@@ -1,3 +1,4 @@
+alembic
 marshmallow
 mysql-connector-python
 requests

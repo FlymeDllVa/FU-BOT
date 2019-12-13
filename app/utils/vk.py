@@ -88,7 +88,8 @@ class Bot:
             start_day = -datetime.datetime.now().isoweekday() + 1
         elif start_day == -2:
             start_day = 7 - datetime.datetime.now().isoweekday() + 1
-        schedule = format_schedule(user, start_day=start_day, days=days, text=text)
+        schedule = format_schedule(user.current_id, user.role, start_day=start_day, days=days, text=text,
+                                   show_groups=user.show_groups, show_location=user.show_location)
         if schedule == "'Connection error'":
             logger.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
             self.vk.messages.send(
@@ -173,7 +174,9 @@ class Bot:
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return user
-        schedule = format_schedule(user=user, date=date)
+        start_day = (date - datetime.datetime.now()).days
+        schedule = format_schedule(user.current_id, user.role, start_day=start_day, show_location=user.show_location,
+                                   show_groups=user.show_groups)
         if schedule is None:
             self.vk.messages.send(
                 peer_id=user.id,
@@ -432,12 +435,18 @@ class Bot:
         #     random_id=get_random_id(),
         #     message=strings.SEARCHING,
         # )
+        # if payload:
+        #     start_day = payload.get(const.PAYLOAD_START_DAY, 0)
+        #     days = payload.get(const.PAYLOAD_DAYS, 0)
         if payload:
             start_day = payload.get(const.PAYLOAD_START_DAY, 0)
-            days = payload.get(const.PAYLOAD_DAYS, 0)
-        schedule = format_schedule(user, start_day=start_day, days=days, search=dict(id=user.found_id,
-                                                                                     name=user.found_name,
-                                                                                     type=user.found_type))
+            days = payload.get(const.PAYLOAD_DAYS, 1)
+        if start_day == -1:
+            start_day = -datetime.datetime.now().isoweekday() + 1
+        elif start_day == -2:
+            start_day = 7 - datetime.datetime.now().isoweekday() + 1
+        schedule = format_schedule(user.found_id, type=user.found_type, start_day=start_day, days=days,
+                                   show_groups=True, show_location=True)
         User.update_user(user=user, data=dict(found_id=None, found_name=None, found_type=None))
         if schedule is None:
             self.vk.messages.send(

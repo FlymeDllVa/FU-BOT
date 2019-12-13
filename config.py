@@ -8,10 +8,8 @@ GROUP_ID = os.environ.get('VK_GROUP_ID') or "185809180"
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'bot'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('VK_DB_URL') or 'postgresql://postgres:postgres@localhost:5432/bot'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('VK_DB_URL') or 'mysql+pymysql://root:password@localhost:3306/bot'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     DB_SETTINGS = {'connect_timeout': 1700} if 'mysql' in SQLALCHEMY_DATABASE_URI else {}
     SQLALCHEMY_SETTINGS = {'pool_recycle': 1700, 'pool_size': 50,
                            'pool_pre_ping': True} if 'mysql' in SQLALCHEMY_DATABASE_URI else {}
-    # DB_SETTINGS = {'pool_recycle': 600} # MySQL
-    # DB_SETTINGS = {'pool_size': 30, 'max_overflow': 10} # PostgeSQL

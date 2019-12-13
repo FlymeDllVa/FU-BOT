@@ -1,14 +1,16 @@
 import logging
 
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Integer, String, Column, Boolean, create_engine
+from sqlalchemy import Integer, String, Column, Boolean, create_engine, MetaData
 from sqlalchemy.orm import scoped_session, sessionmaker
 from _mysql_connector import MySQLInterfaceError
 
 from app.utils.constants import CHANGES
 from config import Config
 
-db = declarative_base()
+metadata = MetaData()
+
+db = declarative_base(metadata=metadata)
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, **Config.SQLALCHEMY_SETTINGS, connect_args=Config.DB_SETTINGS)
 session = scoped_session(sessionmaker(bind=engine))
 
@@ -17,6 +19,7 @@ log = logging.getLogger(__name__)
 
 # db.metadata.drop_all(engine)
 # db.metadata.create_all(engine)
+
 
 class User(db):
     __tablename__ = "vk_users"

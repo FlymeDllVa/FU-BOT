@@ -212,10 +212,10 @@ class Keyboards:
                                      const.PAYLOAD_DAYS: 2})
         keyboard.add_line()
         keyboard.add_button('Эта неделя',
-                            payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: 0,
+                            payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: -1,
                                      const.PAYLOAD_DAYS: 7})
         keyboard.add_button('Следующая неделя',
-                            payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: 7,
+                            payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: -2,
                                      const.PAYLOAD_DAYS: 7})
         keyboard.add_line()
         keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})

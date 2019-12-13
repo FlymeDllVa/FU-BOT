@@ -60,7 +60,7 @@ def vk_bot_from_user(bot, event):
                 bot.search_teacher_to_set(user, message_lower)
             else:
                 bot.send_msg(user.id, 'Сделайте выбор кнопками внизу\n\nЕсли кнопки не отображаются - воспользуйтесь '
-                                      'официальным клиентом Вконтакте')
+                                      'официальным клиентом ВКонтакте последней версии')
         elif user.found_name == const.CHANGES and user.found_id == 0:
             if user.found_type == const.ROLE_TEACHER:
                 bot.search_teacher_schedule(user, message_lower)
