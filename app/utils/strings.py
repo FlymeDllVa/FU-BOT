@@ -27,3 +27,20 @@ GROUP_CHANGED_FOR = "Группа изменена на «{}»"
 GROUP = "Группа «{}»"
 GROUP_NOT_FOUND = 'Группа «{}» не существует\n\nПроверьте название группы на http://ruz.fa.ru/ruz'
 FOUND_TEACHER = "Найденный преподаватель: {}"
+
+TODAY = 'Сегодня'
+TOMORROW = 'Завтра'
+THIS_WEEK = 'Эта неделя'
+NEXT_WEEK = 'Следующая неделя'
+CANCEL = 'Отмена'
+
+STUDENT = 'Студент'
+TEACHER = 'Преподаватель'
+
+SEARCH = 'Поиск'
+BACK = 'Назад'
+BACK_I = '← Назад'
+SETTINGS = 'Настройки'
+
+SHOW_GROUPS = 'Группы в расписании'
+SHOW_LOCATION = 'Корпус в расписании'

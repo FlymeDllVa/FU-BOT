@@ -1,6 +1,7 @@
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from app.models import User
 import app.utils.constants as const
+import app.utils.strings as S
 
 
 class Keyboards:
@@ -17,11 +18,11 @@ class Keyboards:
     @staticmethod
     def choose_role():
         keyboard = VkKeyboard()
-        keyboard.add_button('Студент', payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
+        keyboard.add_button(S.STUDENT, payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
                                                 const.PAYLOAD_ROLE: const.ROLE_STUDENT})
         keyboard.add_line()
-        keyboard.add_button('Преподаватель', payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
-                                                      const.PAYLOAD_ROLE: const.ROLE_TEACHER})
+        keyboard.add_button(S.TEACHER, payload={const.PAYLOAD_MENU: const.MENU_CHOOSE_ROLE,
+                                                const.PAYLOAD_ROLE: const.ROLE_TEACHER})
         return keyboard.get_keyboard()
 
     @staticmethod
@@ -35,23 +36,23 @@ class Keyboards:
 
         keyboard = VkKeyboard()
 
-        keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE,
+        keyboard.add_button(S.TODAY, color=VkKeyboardColor.POSITIVE,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_SHOW, const.PAYLOAD_START_DAY: 0,
                                      const.PAYLOAD_DAYS: 1})
-        keyboard.add_button('Завтра',
+        keyboard.add_button(S.TOMORROW,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_SHOW, const.PAYLOAD_START_DAY: 1,
                                      const.PAYLOAD_DAYS: 1})
         keyboard.add_line()
-        keyboard.add_button('Эта неделя',
+        keyboard.add_button(S.THIS_WEEK,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_SHOW, const.PAYLOAD_START_DAY: -1,
                                      const.PAYLOAD_DAYS: 7})
-        keyboard.add_button('Следующая неделя',
+        keyboard.add_button(S.NEXT_WEEK,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_SHOW, const.PAYLOAD_START_DAY: -2,
                                      const.PAYLOAD_DAYS: 7})
         keyboard.add_line()
-        keyboard.add_button('Поиск', payload={const.PAYLOAD_MENU: const.MENU_SEARCH})
+        keyboard.add_button(S.SEARCH, payload={const.PAYLOAD_MENU: const.MENU_SEARCH})
         keyboard.add_line()
-        keyboard.add_button('Настройки', payload={const.PAYLOAD_MENU: const.MENU_SETTINGS})
+        keyboard.add_button(S.SETTINGS, payload={const.PAYLOAD_MENU: const.MENU_SETTINGS})
 
         return keyboard.get_keyboard()
 
@@ -65,7 +66,7 @@ class Keyboards:
         keyboard.add_line()
         keyboard.add_button('Расписание преподавателя', payload={const.PAYLOAD_MENU: const.MENU_SEARCH_TEACHER})
         keyboard.add_line()
-        keyboard.add_button('← Назад', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE})
+        keyboard.add_button(S.BACK_I, color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE})
         return keyboard.get_keyboard()
 
     @staticmethod
@@ -80,11 +81,11 @@ class Keyboards:
         keyboard = VkKeyboard()
         keyboard.add_button('Изменить информацию о себе', payload={const.PAYLOAD_MENU: const.MENU_CHANGE_GROUP})
         keyboard.add_line()
-        keyboard.add_button('Группы в расписании',
+        keyboard.add_button(S.SHOW_GROUPS,
                             color=VkKeyboardColor.POSITIVE if user.show_groups else VkKeyboardColor.NEGATIVE,
                             payload={const.PAYLOAD_MENU: const.MENU_SET_SETTINGS,
                                      const.PAYLOAD_TYPE: const.SETTINGS_TYPE_GROUPS})
-        keyboard.add_button('Корпус в расписании',
+        keyboard.add_button(S.SHOW_LOCATION,
                             color=VkKeyboardColor.POSITIVE if user.show_location else VkKeyboardColor.NEGATIVE,
                             payload={const.PAYLOAD_MENU: const.MENU_SET_SETTINGS,
                                      const.PAYLOAD_TYPE: const.SETTINGS_TYPE_LOCATION})
@@ -102,7 +103,7 @@ class Keyboards:
                 keyboard.add_button('Отписаться от подписки на расписание',
                                     payload={const.PAYLOAD_MENU: const.MENU_UNSUBSCRIBE})
                 keyboard.add_line()
-        keyboard.add_button('← Назад', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
+        keyboard.add_button(S.BACK_I, color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
 
         return keyboard.get_keyboard()
 
@@ -129,7 +130,7 @@ class Keyboards:
         keyboard.add_button('22:00')
         keyboard.add_line()
 
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
+        keyboard.add_button(S.CANCEL, color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
 
         return keyboard.get_keyboard()
 
@@ -155,15 +156,15 @@ class Keyboards:
                             payload={const.PAYLOAD_MENU: const.MENU_UPDATE_SUBSCRIPTION,
                                      const.PAYLOAD_TYPE: const.SUBSCRIPTION_TODAY_TOMORROW})
         keyboard.add_line()
-        keyboard.add_button('Эта неделя',
+        keyboard.add_button(S.THIS_WEEK,
                             payload={const.PAYLOAD_MENU: const.MENU_UPDATE_SUBSCRIPTION,
                                      const.PAYLOAD_TYPE: const.SUBSCRIPTION_WEEK})
         keyboard.add_line()
-        keyboard.add_button('Следующая неделя',
+        keyboard.add_button(S.NEXT_WEEK,
                             payload={const.PAYLOAD_MENU: const.MENU_UPDATE_SUBSCRIPTION,
                                      const.PAYLOAD_TYPE: const.SUBSCRIPTION_NEXT_WEEK})
         keyboard.add_line()
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
+        keyboard.add_button(S.CANCEL, color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
 
         return keyboard.get_keyboard()
 
@@ -187,7 +188,7 @@ class Keyboards:
                                          const.PAYLOAD_FOUND_NAME: item[1],
                                          "found_type": found_type})
             keyboard.add_line()
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
+        keyboard.add_button(S.CANCEL, color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
 
         return keyboard.get_keyboard()
 
@@ -200,10 +201,10 @@ class Keyboards:
         """
 
         keyboard = VkKeyboard()
-        keyboard.add_button('Сегодня', color=VkKeyboardColor.POSITIVE,
+        keyboard.add_button(S.TODAY, color=VkKeyboardColor.POSITIVE,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: 0,
                                      const.PAYLOAD_DAYS: 1})
-        keyboard.add_button('Завтра',
+        keyboard.add_button(S.TOMORROW,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: 1,
                                      const.PAYLOAD_DAYS: 1})
         keyboard.add_line()
@@ -211,19 +212,19 @@ class Keyboards:
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: 0,
                                      const.PAYLOAD_DAYS: 2})
         keyboard.add_line()
-        keyboard.add_button('Эта неделя',
+        keyboard.add_button(S.THIS_WEEK,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: -1,
                                      const.PAYLOAD_DAYS: 7})
-        keyboard.add_button('Следующая неделя',
+        keyboard.add_button(S.NEXT_WEEK,
                             payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_FOUND, const.PAYLOAD_START_DAY: -2,
                                      const.PAYLOAD_DAYS: 7})
         keyboard.add_line()
-        keyboard.add_button('Отмена', color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
+        keyboard.add_button(S.CANCEL, color=VkKeyboardColor.PRIMARY, payload={const.PAYLOAD_MENU: const.MENU_CANCEL})
 
         return keyboard.get_keyboard()
 
     @staticmethod
     def back_to_choosing_role():
         keyboard = VkKeyboard()
-        keyboard.add_button('Назад', payload={const.PAYLOAD_MENU: const.MENU_CHANGE_GROUP})
+        keyboard.add_button(S.BACK, payload={const.PAYLOAD_MENU: const.MENU_CHANGE_GROUP})
         return keyboard.get_keyboard()

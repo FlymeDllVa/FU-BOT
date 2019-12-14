@@ -12,7 +12,7 @@ metadata = MetaData()
 
 db = declarative_base(metadata=metadata)
 engine = create_engine(Config.SQLALCHEMY_DATABASE_URI, **Config.SQLALCHEMY_SETTINGS, connect_args=Config.DB_SETTINGS)
-session = scoped_session(sessionmaker(bind=engine))
+Session = scoped_session(sessionmaker(bind=engine))
 
 log = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class User(db):
         :param time:
         :return:
         """
+        session = Session()
 
         try:
             res = session.query(cls).filter_by(subscription_time=time).all()
@@ -54,6 +55,8 @@ class User(db):
         except MySQLInterfaceError as e:
             log.warning('Error in subscription %r', e)
             return []
+        finally:
+            session.remove()
 
     @classmethod
     def search_user(cls, id: int) -> 'User':
@@ -63,13 +66,14 @@ class User(db):
         :param id:
         :return:
         """
-
+        session = Session()
         user = session.query(cls).filter_by(id=id).first()
         if user:
             return user
         user = cls(id=id)
         session.add(user)
         session.commit()
+        session.remove()
         return user
 
     @classmethod
@@ -81,14 +85,16 @@ class User(db):
         :param data:
         :return:
         """
-
+        session = Session()
         for key, value in data['data'].items():
             if hasattr(user, key):
                 setattr(user, key, value)
         session.commit()
+        session.remove()
         return user
 
     def cancel_changes(self):
+        session = Session()
         if self.current_name == CHANGES:
             self.current_name = None
         elif self.found_name == CHANGES and self.found_id == 0:
@@ -99,3 +105,4 @@ class User(db):
         elif self.schedule_day_date == CHANGES:
             self.schedule_day_date = None
         session.commit()
+        session.remove()

@@ -429,18 +429,8 @@ class Bot:
         """
         Отсылает пользователю расписание преподавателя
         """
-
-        # self.vk.messages.send(
-        #     peer_id=user.id,
-        #     random_id=get_random_id(),
-        #     message=strings.SEARCHING,
-        # )
-        # if payload:
-        #     start_day = payload.get(const.PAYLOAD_START_DAY, 0)
-        #     days = payload.get(const.PAYLOAD_DAYS, 0)
-        if payload:
-            start_day = payload.get(const.PAYLOAD_START_DAY, 0)
-            days = payload.get(const.PAYLOAD_DAYS, 1)
+        start_day = payload.get(const.PAYLOAD_START_DAY, 0)
+        days = payload.get(const.PAYLOAD_DAYS, 1)
         if start_day == -1:
             start_day = -datetime.datetime.now().isoweekday() + 1
         elif start_day == -2:
@@ -448,17 +438,9 @@ class Bot:
         schedule = format_schedule(user.found_id, type=user.found_type, start_day=start_day, days=days,
                                    show_groups=True, show_location=True)
         User.update_user(user=user, data=dict(found_id=None, found_name=None, found_type=None))
-        if schedule is None:
-            self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message=strings.CANT_GET_SCHEDULE,
-                keyboard=self.keyboard.schedule_menu(user)
-            )
-            return None
         self.send_msg(
             peer_id=user.id,
-            message=schedule,
+            message=schedule or strings.CANT_GET_SCHEDULE,
             keyboard=self.keyboard.schedule_menu(user)
         )
         return user
