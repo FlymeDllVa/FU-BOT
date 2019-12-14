@@ -47,16 +47,14 @@ class User(db):
         :param time:
         :return:
         """
-        session = Session()
+        Session()
 
         try:
-            res = session.query(cls).filter_by(subscription_time=time).all()
+            res = Session.query(cls).filter_by(subscription_time=time).all()
             return res
         except MySQLInterfaceError as e:
             log.warning('Error in subscription %r', e)
             return []
-        finally:
-            session.remove()
 
     @classmethod
     def search_user(cls, id: int) -> 'User':
@@ -66,14 +64,13 @@ class User(db):
         :param id:
         :return:
         """
-        session = Session()
-        user = session.query(cls).filter_by(id=id).first()
+        Session()
+        user = Session.query(cls).filter_by(id=id).first()
         if user:
             return user
         user = cls(id=id)
-        session.add(user)
-        session.commit()
-        session.remove()
+        Session.add(user)
+        Session.commit()
         return user
 
     @classmethod
@@ -85,16 +82,13 @@ class User(db):
         :param data:
         :return:
         """
-        session = Session()
         for key, value in data['data'].items():
             if hasattr(user, key):
                 setattr(user, key, value)
-        session.commit()
-        session.remove()
+        Session.commit()
         return user
 
     def cancel_changes(self):
-        session = Session()
         if self.current_name == CHANGES:
             self.current_name = None
         elif self.found_name == CHANGES and self.found_id == 0:
@@ -104,5 +98,4 @@ class User(db):
             self.subscription_days = None
         elif self.schedule_day_date == CHANGES:
             self.schedule_day_date = None
-        session.commit()
-        session.remove()
+        Session.commit()
