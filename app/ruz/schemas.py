@@ -4,7 +4,16 @@ from datetime import datetime
 from marshmallow import fields, Schema, EXCLUDE, pre_load, post_load
 
 
-class AudienceField(fields.Field):
+class DefaultString(fields.String):
+    def deserialize(self, value, attr: str = None, data=None, **kwargs):
+        if not value:
+            return self.default
+        output = self._deserialize(value, attr, data, **kwargs)
+        self._validate(output)
+        return output
+
+
+class AudienceField(DefaultString):
     def _deserialize(self, value, attr, data, **kwargs):
         # FIXME костыль
         return value.replace('_', '-').split('/')[-1]
@@ -27,13 +36,14 @@ class Pair(Schema):
 
     time_start = fields.String(data_key='beginLesson')
     time_end = fields.String(data_key='endLesson')
-    name = fields.String(data_key='discipline')
-    type = fields.String(data_key='kindOfWork')
+    name = DefaultString(data_key='discipline', default='Без названия')
+    type = DefaultString(data_key='kindOfWork', default='')
     groups = fields.Raw()
-    audience = AudienceField(data_key='auditorium')
-    location = fields.String(data_key='building')
-    teachers_name = fields.String(data_key='lecturer')
+    audience = AudienceField(data_key='auditorium', default='Без аудитории')
+    location = DefaultString(data_key='building', default='')
+    teachers_name = DefaultString(data_key='lecturer', default='Преподователь не определен')
     date = DateField()
+    note = fields.String(allow_none=True)
 
     class Meta:
         unknown = EXCLUDE

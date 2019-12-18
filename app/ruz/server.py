@@ -157,9 +157,9 @@ def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1, show_
                     text += f", {lesson['location']}\n"
                 else:
                     text += "\n"
-                if "teachers_name" in lesson:
-                    text += f"Кто: {lesson['teachers_name']}"
-                text += "\n"
+                text += f"Кто: {lesson['teachers_name']}\n"
+                if lesson['note']:
+                    text += f'Примечание: {lesson["note"]}\n'
         else:
             text += f"Нет пар\n"
         text += "\n"
