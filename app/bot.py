@@ -69,7 +69,7 @@ def vk_bot_from_user(bot, event):
         elif user.subscription_days == const.CHANGES:
             bot.update_subscribe_time(user, message_lower)
         elif user.schedule_day_date == const.CHANGES:
-            bot.send_day_schedule(user, message_lower)
+            bot.send_day_schedule_text(user, message_lower)
         elif message == "📅":
             logger.info('%s asked for calendar for group %s', user.id, user.current_name)
             bot.chose_calendar(user)

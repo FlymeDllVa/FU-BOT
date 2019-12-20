@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from app.models import User
 import app.utils.constants as const
@@ -227,4 +229,15 @@ class Keyboards:
     def back_to_choosing_role():
         keyboard = VkKeyboard()
         keyboard.add_button(S.BACK, payload={const.PAYLOAD_MENU: const.MENU_CHANGE_GROUP})
+        return keyboard.get_keyboard()
+
+    @staticmethod
+    def inline_date(date: datetime):
+        keyboard = VkKeyboard(inline=True)
+        keyboard.add_button('◀', payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_SHOW,
+                                          const.PAYLOAD_DATE: (date - timedelta(days=1)).strftime(const.DATE_FORMAT),
+                                          const.PAYLOAD_SHOW_INLINE_DATE: True})
+        keyboard.add_button('▶', payload={const.PAYLOAD_MENU: const.MENU_SCHEDULE_SHOW,
+                                          const.PAYLOAD_DATE: (date + timedelta(days=1)).strftime(const.DATE_FORMAT),
+                                          const.PAYLOAD_SHOW_INLINE_DATE: True})
         return keyboard.get_keyboard()

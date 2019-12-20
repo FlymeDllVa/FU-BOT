@@ -2,6 +2,8 @@ import vk_api
 import datetime
 import logging
 
+from vk_api import VkApiError
+
 from app.utils.keyboards import Keyboards
 from vk_api.bot_longpoll import VkBotLongPoll
 from vk_api.utils import get_random_id
@@ -34,21 +36,16 @@ class Bot:
         logger.info('Bot started')
 
     def send_msg(self, peer_id, message, keyboard=None):
-        if len(message) > 4000:
-            for mess in [message[i: i + 4000] for i in range(0, len(message), 4000)]:
+        try:
+            for message_part in [message[i: i + 4000] for i in range(0, len(message), 4000)]:
                 self.vk.messages.send(
                     peer_id=peer_id,
                     random_id=get_random_id(),
-                    message=mess,
+                    message=message_part,
                     keyboard=keyboard
                 )
-        else:
-            self.vk.messages.send(
-                peer_id=peer_id,
-                random_id=get_random_id(),
-                message=message,
-                keyboard=keyboard
-            )
+        except VkApiError as e:
+            logger.warning(e)
 
     """
     Меню расписания
@@ -69,11 +66,12 @@ class Bot:
             )
         return user
 
-    def send_schedule(self, user: User, start_day: int = 0, days: int = 1, text: str = "",
+    def send_schedule(self, user: User, start_day: int = 0, days: int = 1, text: str = "", inline_keyboard_date=None,
                       payload: dict = None) -> User or None:
         """
         Отсылает пользователю расписание
 
+        :param inline_keyboard_date:
         :param text:
         :param start_day: -1 - начало этой недели, -2 - начало следующей
         :param user:
@@ -84,6 +82,9 @@ class Bot:
         if payload:
             start_day = payload.get(const.PAYLOAD_START_DAY, 0)
             days = payload.get(const.PAYLOAD_DAYS, 1)
+            if payload.get(const.PAYLOAD_SHOW_INLINE_DATE, False):
+                inline_keyboard_date = datetime.datetime.strptime(payload[const.PAYLOAD_DATE], const.DATE_FORMAT)
+                start_day = (inline_keyboard_date - datetime.datetime.today() + datetime.timedelta(days=1)).days
         if start_day == -1:
             start_day = -datetime.datetime.now().isoweekday() + 1
         elif start_day == -2:
@@ -132,6 +133,7 @@ class Bot:
         self.send_msg(
             peer_id=user.id,
             message=schedule,
+            keyboard=self.keyboard.inline_date(inline_keyboard_date) if inline_keyboard_date is not None else None
         )
         return user
 
@@ -149,7 +151,7 @@ class Bot:
         )
         return user
 
-    def send_day_schedule(self, user: User, date: str) -> User:
+    def send_day_schedule_text(self, user: User, date: str) -> User:
         """
         Отправляет расписание на 1 день
 
@@ -174,7 +176,7 @@ class Bot:
                 keyboard=self.keyboard.schedule_menu(user)
             )
             return user
-        start_day = (date - datetime.datetime.now()).days
+        start_day = (date - datetime.datetime.today() + datetime.timedelta(days=1)).days
         schedule = format_schedule(user.current_id, user.role, start_day=start_day, show_location=user.show_location,
                                    show_groups=user.show_groups)
         if schedule is None:
@@ -188,6 +190,11 @@ class Bot:
         self.send_msg(
             peer_id=user.id,
             message=schedule,
+            keyboard=self.keyboard.inline_date(date)
+        )
+        self.send_msg(
+            peer_id=user.id,
+            message=strings.CHOOSE_MENU,
             keyboard=self.keyboard.schedule_menu(user)
         )
         return user

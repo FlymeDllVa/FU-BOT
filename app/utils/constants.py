@@ -45,3 +45,7 @@ PAYLOAD_START_DAY = "start_day"
 PAYLOAD_DAYS = "days"
 PAYLOAD_TYPE = "type"
 PAYLOAD_ROLE = "role"
+PAYLOAD_DATE = "date"
+PAYLOAD_SHOW_INLINE_DATE = "show_inline_date"
+
+DATE_FORMAT = '%d.%m.%Y'
