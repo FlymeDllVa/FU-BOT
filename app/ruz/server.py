@@ -3,10 +3,10 @@ import datetime
 from urllib.parse import quote
 
 from marshmallow import ValidationError
-import requests
+from aiohttp import ClientSession, ClientTimeout
 
 from app.ruz.schemas import ScheduleSchema
-from app.ruz.cache import timed_cache
+# from app.ruz.cache import timed_cache
 
 SCHEDULE_SCHEMA = ScheduleSchema()
 
@@ -43,8 +43,8 @@ def date_name(date: datetime) -> str:
     return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][date.weekday()]
 
 
-@timed_cache(minutes=180)
-def get_group(group_name: str) -> Data:
+# @timed_cache(minutes=180)
+async def get_group(group_name: str) -> Data:
     """
     Запрашивает группу у сервера
 
@@ -52,18 +52,19 @@ def get_group(group_name: str) -> Data:
     :return: id группы в Data
     """
     try:
-        request = requests.get(f"https://ruz.fa.ru/api/search?term={quote(group_name)}&type=group", timeout=2)
-    except requests.exceptions.ReadTimeout:
+        async with ClientSession() as client:
+            request = await client.get(f"https://ruz.fa.ru/api/search?term={quote(group_name)}&type=group", timeout=2)
+            found_group = await request.json()
+    except ClientTimeout:
         return Data.error('Timeout error')
-    found_group = request.json()
     if found_group and found_group[0]['label'].strip().upper() == group_name:
         return Data(found_group[0]['id'])
     else:
         return Data.error('Not found')
 
 
-@timed_cache(minutes=2)
-def get_schedule(id: int, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
+# @timed_cache(minutes=2)
+async def get_schedule(id: int, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
     """
     Запрашивает расписание у сервера
     :param id:
@@ -81,10 +82,11 @@ def get_schedule(id: int, date_start: datetime = None, date_end: datetime = None
     url = f"https://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}" \
           f"&finish={date_end.strftime('%Y.%m.%d')}&lng=1"
     try:
-        request = requests.get(url)
-    except TimeoutError:
+        async with ClientSession() as client:
+            request = await client.get(url)
+            request_json = await request.json()
+    except ClientTimeout:
         return Data.error('Timeout error')
-    request_json = request.json()
     try:
         res = SCHEDULE_SCHEMA.load({'pairs': request_json})
         return Data(res)
@@ -93,8 +95,8 @@ def get_schedule(id: int, date_start: datetime = None, date_end: datetime = None
         return Data.error('validation error')
 
 
-@timed_cache(minutes=180)
-def get_teacher(teacher_name: str) -> list or None:
+# @timed_cache(minutes=180)
+async def get_teacher(teacher_name: str) -> list or None:
     """
     Поиск преподователя
 
@@ -102,15 +104,18 @@ def get_teacher(teacher_name: str) -> list or None:
     :return: [(id, name), ...]
     """
     try:
-        request = requests.get(f"https://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=lecturer", timeout=2)
-    except requests.exceptions.ReadTimeout:
+        async with ClientSession() as client:
+            request = await client.get(f"https://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=lecturer",
+                                       timeout=2)
+            request_json = await request.json()
+    except ClientTimeout:
         return Data.error('Timeout error')
-    teachers = [(i['id'], i['label']) for i in request.json() if i['id']]
+    teachers = [(i['id'], i['label']) for i in request_json if i['id']]
     return Data(teachers)
 
 
-def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1, show_groups: bool = False,
-                    show_location: bool = False, text: str = "") -> str or None:
+async def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1, show_groups: bool = False,
+                          show_location: bool = False, text: str = "") -> str or None:
     """
     Форматирует расписание к виду который отправляет бот
 
@@ -125,8 +130,8 @@ def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1, show_
     """
     date_start = datetime.datetime.now() + datetime.timedelta(days=start_day)
     date_end = date_start + datetime.timedelta(days=days)
-    schedule = get_schedule(id, date_start, date_end,
-                            type='lecturer' if type == 'teacher' else 'group')
+    schedule = await get_schedule(id, date_start, date_end,
+                                  type='lecturer' if type == 'teacher' else 'group')
     if schedule.has_error:
         return None
     else:

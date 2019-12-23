@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
-from app.models import User
+
 import app.utils.constants as const
 import app.utils.strings as S
+from app.models import UserProxy
 
 
 class Keyboards:
@@ -28,7 +29,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @staticmethod
-    def schedule_menu(user: User) -> str:
+    def schedule_menu(user: UserProxy) -> str:
         """
         Возвращает клавиатуру главного меню
 
@@ -72,7 +73,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @staticmethod
-    def settings_menu(user: User) -> str:
+    def settings_menu(user: UserProxy) -> str:
         """
         Возвращает клавиатуру настроек
 
@@ -110,7 +111,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @staticmethod
-    def subscribe_to_schedule_start_menu(user: User) -> str:
+    def subscribe_to_schedule_start_menu(user: UserProxy) -> str:
         """
         Возвращает клавиатуру подписки на расписание
 
@@ -137,7 +138,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @staticmethod
-    def subscribe_to_schedule_day_menu(user: User) -> str:
+    def subscribe_to_schedule_day_menu(user: UserProxy) -> str:
         """
         Возвращает клавиатуру для выбора дня рассылки
 
@@ -195,7 +196,7 @@ class Keyboards:
         return keyboard.get_keyboard()
 
     @staticmethod
-    def find_schedule_menu(user: User) -> str:
+    def find_schedule_menu(user: UserProxy) -> str:
         """
         Возвращает клавиатуру для выбора даты
         :param user:
