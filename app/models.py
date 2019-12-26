@@ -42,7 +42,10 @@ class User(db):
         return sa.select([
             cls.id,
             cls.current_id,
-            cls.role
+            cls.role,
+            cls.show_location,
+            cls.show_groups,
+            cls.subscription_days
         ]).where(cls.subscription_time == time)
 
     @classmethod

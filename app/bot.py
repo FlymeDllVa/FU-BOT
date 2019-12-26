@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import random
 import logging
@@ -35,11 +36,21 @@ def get_random_id():
 
 
 class Bot:
-    def __init__(self, session: BaseSession, group_id: str, loop: AbstractEventLoop, db: connection, mode=4096):
+    def __init__(self, session: BaseSession, group_id: str = None, loop: AbstractEventLoop = None,
+                 db: connection = None, mode=4096, without_longpool=False):
+        if db is None and not without_longpool:
+            raise RuntimeError('DB must be set')
         self.vk = API(session)
-        self.longpool = BotsLongPoll(session, group_id=group_id, mode=mode)
-        self.loop = loop
+        if not without_longpool:
+            self.longpool = BotsLongPoll(session, group_id=group_id, mode=mode)
+        else:
+            self.longpool = None
+        self.loop = loop or asyncio.get_running_loop()
         self.db = db
+
+    @classmethod
+    def without_longpool(cls, session: BaseSession, loop: AbstractEventLoop = None):
+        return cls(session, loop=loop, without_longpool=True)
 
     @staticmethod
     def parse_resp(resp):
@@ -51,6 +62,8 @@ class Bot:
             await conn.execute(User.update_user(user_id, data=data))
 
     async def main_loop(self):
+        if self.longpool is None:
+            raise NotImplementedError()
         for event in self.parse_resp(await self.longpool.wait()):
             log.debug('User %s with message "%s"', event.peer_id, event.text)
             self.loop.create_task(self.handle_new_message(event))
@@ -746,6 +759,7 @@ class Bot:
         return user
 
     async def cancel(self, user, payload: dict = None):
+        # TODO
         # async with self.db() as conn:
         #     await conn.execute(User.cancel_changes(user.id))
         await self.send_schedule_menu(user, payload)
