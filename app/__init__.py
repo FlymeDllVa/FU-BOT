@@ -6,7 +6,6 @@ from app import models
 from app.dependency import config_dependency
 from app.services import BotService
 
-# logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(name)s:%(asctime)-15s - %(message)s')
 log = logging.getLogger(__name__)
 
 
@@ -16,7 +15,7 @@ def start_app(config: dict):
             BotService(
                 token=config['vk_token'],
                 group_id=config['vk_group_id']),
-            log_level=logging.DEBUG
+            log_level=logging.DEBUG if config['debug'] else logging.INFO
     ) as loop:
         log.info('Bot started')
         loop.run_forever()

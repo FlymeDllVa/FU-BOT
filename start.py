@@ -12,6 +12,7 @@ config = dict(
     vk_token=getenv(
         'VK_TOKEN') or '97d0fb8a89e891819942c11c5ada66c40d7830b6eaf532e313d7cdd754d90f190fbbb4e3e71b91717e27d',
     vk_group_id=getenv('GROUP_ID') or '185809180',
+    debug=True
 )
 
 if __name__ == '__main__':

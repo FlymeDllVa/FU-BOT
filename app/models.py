@@ -62,7 +62,7 @@ class User(db):
         ])
 
     @classmethod
-    def update_user(cls, id: int, **data) -> sa.sql:
+    def update_user(cls, id: int, data) -> sa.sql:
         """
         Обновляет поля пользователя поданные как kwargs
 
@@ -70,23 +70,31 @@ class User(db):
         :param data:
         :return:
         """
-        return cls.__table__.update().values(**data).where(cls.id == id)
+        print(data)
+        sql = cls.__table__.update().values(data).where(cls.id == id)
+        print(sql)
+        return sql
 
     @classmethod
     def cancel_changes(cls, id: int):
         return cls.__table__.update().values(
-            case(
-                [
-                    (cls.current_name == CHANGES, None),
-                    (cls.found_name == CHANGES, None),
-                    (cls.subscription_days == CHANGES, None),
-                    (cls.schedule_day_date == CHANGES, None),
-                ]
+            current_name=case([
+                (cls.current_name == CHANGES, None),
+            ]),
+            found_name=case([
+                (cls.found_name == CHANGES, None),
+            ]),
+            subscription_days=case([
+                (cls.subscription_days == CHANGES, None),
+            ]),
+            schedule_day_date=case([
+                (cls.schedule_day_date == CHANGES, None),
+            ]
             )).where(cls.id == id)
 
 
 class DBResultProxy:
-    _table: tuple
+    _table: tuple  # Must be implemented in subclass
     _fields: dict
 
     def __init__(self, result):
@@ -94,6 +102,14 @@ class DBResultProxy:
 
     def __getattr__(self, item):
         return self._fields[item]
+
+    def upd(self, key, value):
+        if key not in self._table:
+            raise KeyError('Unknown field')
+        self._fields[key] = value
+
+    def __repr__(self):
+        return f'<{__class__} ' + "; ".join(f'{i}: {repr(getattr(self, i))}' for i in self._table) + '>'
 
 
 class UserProxy(DBResultProxy):

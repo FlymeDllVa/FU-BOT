@@ -158,7 +158,7 @@ async def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1,
                         text += f"{', '.join(lesson['groups'])}\n"
                 if lesson['audience']:
                     text += f"Где: {lesson['audience']}"
-                if show_location is True and lesson['location'] is not None:
+                if show_location and lesson['location'] is not None:
                     text += f", {lesson['location']}\n"
                 else:
                     text += "\n"

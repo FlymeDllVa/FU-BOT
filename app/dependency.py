@@ -12,7 +12,7 @@ def config_dependency(config):
         engine = await create_engine(
             host=config['db_host'], user=config['db_user'], password=config['db_pass'],
             db=config['db_database'], port=config['db_port'], autocommit=True,
-            connect_timeout=config['db_connect_timeout']
+            connect_timeout=config['db_connect_timeout'], echo=True if config['debug'] else False
         )
         yield engine.acquire
         engine.close()

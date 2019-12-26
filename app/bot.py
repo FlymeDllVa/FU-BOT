@@ -34,7 +34,6 @@ def get_random_id():
     return random.getrandbits(31) * random.choice([-1, 1])
 
 
-# TODO Доделать взаимодействие с базой
 class Bot:
     def __init__(self, session: BaseSession, group_id: str, loop: AbstractEventLoop, db: connection, mode=4096):
         self.vk = API(session)
@@ -46,6 +45,10 @@ class Bot:
     def parse_resp(resp):
         return (BotResponse(**update['object']['message']) for update in resp['updates'] if
                 update['type'] == 'message_new')
+
+    async def update_user(self, user_id, data: dict):
+        async with self.db() as conn:
+            await conn.execute(User.update_user(user_id, data=data))
 
     async def main_loop(self):
         for event in self.parse_resp(await self.longpool.wait()):
@@ -60,8 +63,10 @@ class Bot:
                 user = UserProxy(dict(id=msg.peer_id))
             else:
                 user = UserProxy(user)
+        log.debug('New %r', user)
         payload = ujson.loads(msg.payload if 'payload' in msg else "{}")
         message = msg.text.lower()
+
         if message == ("начать" or "start" or "сброс") or payload.get('command', '') == 'start':
             await self.send_schedule_menu(user)
         elif const.PAYLOAD_MENU in payload:
@@ -213,7 +218,7 @@ class Bot:
         Отправляет пользователю предложение написать дату
         """
 
-        user = User.update_user(user.id, data=dict(schedule_day_date=const.CHANGES))
+        await self.update_user(user.id, data=dict(schedule_day_date=const.CHANGES))
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -231,7 +236,7 @@ class Bot:
         :return:
         """
 
-        user = User.update_user(user.id, data=dict(schedule_day_date=None))
+        await self.update_user(user.id, data=dict(schedule_day_date=None))
         try:
             if len(date.split(".")) == 3:
                 date = datetime.datetime.strptime(date, '%d.%m.%Y')
@@ -276,7 +281,7 @@ class Bot:
         Отправляет пользователю сообщение о том, что для смены группы трубется ее написать
         """
 
-        user = User.update_user(user.id, data=dict(current_name=const.CHANGES, role=None))
+        await self.update_user(user.id, data=dict(current_name=const.CHANGES, role=None))
         return await self.change_role(user)
 
     async def send_check_group(self, user: UserProxy, group_name: str) -> None or UserProxy:
@@ -287,9 +292,9 @@ class Bot:
         group_name = group_name.strip().replace(" ", "").upper()
         group = await get_group(group_name)
         if group.has_error is False:
-            user = User.update_user(user.id,
-                                    data=dict(current_name=group_name, current_id=group.data, show_location=False,
-                                              show_groups=False))
+            await self.update_user(user.id,
+                                   data=dict(current_name=group_name, current_id=group.data, show_location=False,
+                                             show_groups=False))
             await self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -298,7 +303,7 @@ class Bot:
             )
             return user
         else:
-            user = User.update_user(user.id, data=dict(current_name=const.CHANGES))
+            await self.update_user(user.id, data=dict(current_name=const.CHANGES))
             log.warning('Error setting group: user %s for %s', user.id, group_name)
             if group.error_text == "Timeout error":
                 await self.vk.messages.send(
@@ -330,7 +335,7 @@ class Bot:
         group_name = group_name.strip().replace(" ", "").upper()
         group = await get_group(group_name)
         if group.has_error is False:
-            user = User.update_user(user.id, data=dict(found_name=group_name, found_id=group.data))
+            await self.update_user(user.id, data=dict(found_name=group_name, found_id=group.data))
             await self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -339,7 +344,7 @@ class Bot:
             )
             return user
         else:
-            user = User.update_user(user.id, data=dict(found_name=None))
+            await self.update_user(user.id, data=dict(found_name=None))
             log.warning('Error getting schedule: user %s for %s', user.id, group_name)
             if group.error_text == "Timeout error":
                 await self.vk.messages.send(
@@ -370,7 +375,7 @@ class Bot:
         :return:
         """
 
-        user = User.update_user(user.id, data=dict(found_id=0, found_name=const.CHANGES, found_type=const.ROLE_TEACHER))
+        await self.update_user(user.id, data=dict(found_id=0, found_name=const.CHANGES, found_type=const.ROLE_TEACHER))
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -397,8 +402,8 @@ class Bot:
         elif teachers.data:
             teachers = teachers.data
             if len(teachers) == 1:
-                user = User.update_user(user.id, data=dict(found_id=teachers[0][0],
-                                                           found_name=teachers[0][1]))
+                await self.update_user(user.id, data=dict(found_id=teachers[0][0],
+                                                          found_name=teachers[0][1]))
                 await self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
@@ -414,7 +419,7 @@ class Bot:
                 )
                 return user
         else:
-            User.update_user(user.id, data=dict(found_id=None, found_name=None, found_type=None))
+            await self.update_user(user.id, data=dict(found_id=None, found_name=None, found_type=None))
             await self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -441,10 +446,10 @@ class Bot:
         elif teachers.data:
             teachers = teachers.data
             if len(teachers) == 1:
-                user = User.update_user(user.id, data=dict(current_id=teachers[0][0],
-                                                           current_name=teachers[0][1],
-                                                           show_location=True,
-                                                           show_groups=True))
+                await self.update_user(user.id, data=dict(current_id=teachers[0][0],
+                                                          current_name=teachers[0][1],
+                                                          show_location=True,
+                                                          show_groups=True))
                 await self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
@@ -470,11 +475,11 @@ class Bot:
             return None
 
     async def set_teacher(self, user, payload: dict = None):
-        user = User.update_user(user.id, data=dict(current_id=payload[const.PAYLOAD_FOUND_ID],
-                                                   current_name=payload[const.PAYLOAD_FOUND_NAME],
-                                                   show_location=True,
-                                                   show_groups=True
-                                                   ))
+        await self.update_user(user.id, data=dict(current_id=payload[const.PAYLOAD_FOUND_ID],
+                                                  current_name=payload[const.PAYLOAD_FOUND_NAME],
+                                                  show_location=True,
+                                                  show_groups=True
+                                                  ))
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -487,8 +492,8 @@ class Bot:
         Отправляет меню с выбором промежутка расписания для пользователя
         """
         if const.PAYLOAD_FOUND_ID in payload and const.PAYLOAD_FOUND_NAME in payload:
-            user = User.update_user(user.id, data=dict(found_id=payload[const.PAYLOAD_FOUND_ID],
-                                                       found_name=payload[const.PAYLOAD_FOUND_NAME]))
+            await self.update_user(user.id, data=dict(found_id=payload[const.PAYLOAD_FOUND_ID],
+                                                      found_name=payload[const.PAYLOAD_FOUND_NAME]))
             await self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -496,7 +501,7 @@ class Bot:
                 keyboard=Keyboards.find_schedule_menu(user)
             )
         else:
-            User.update_user(user.id, data=dict(found_id=None, found_name=None, found_type=None))
+            await self.update_user(user.id, data=dict(found_id=None, found_name=None, found_type=None))
             await self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -517,7 +522,7 @@ class Bot:
             start_day = 7 - datetime.datetime.now().isoweekday() + 1
         schedule = await format_schedule(user.found_id, type=user.found_type, start_day=start_day, days=days,
                                          show_groups=True, show_location=True)
-        User.update_user(user.id, data=dict(found_id=None, found_name=None, found_type=None))
+        await self.update_user(user.id, data=dict(found_id=None, found_name=None, found_type=None))
         await self.send_msg(
             peer_id=user.id,
             message=schedule or strings.CANT_GET_SCHEDULE,
@@ -536,18 +541,22 @@ class Bot:
         act_type = payload[const.PAYLOAD_TYPE]
 
         if act_type == const.SETTINGS_TYPE_GROUPS:
-            if user.show_groups is False:
-                user = User.update_user(user.id, data=dict(show_groups=True))
+            if not user.show_groups:
+                await self.update_user(user.id, data=dict(show_groups=True))
+                user.upd('show_groups', True)
                 message = "Список групп будет отображаться в раписании"
             else:
-                user = User.update_user(user.id, data=dict(show_groups=False))
+                await self.update_user(user.id, data=dict(show_groups=False))
+                user.upd('show_groups', False)
                 message = "Список групп не будет отображаться в раписании"
         elif act_type == const.SETTINGS_TYPE_LOCATION:
-            if user.show_location is False:
-                user = User.update_user(user.id, data=dict(show_location=True))
+            if not user.show_location:
+                await self.update_user(user.id, data=dict(show_location=True))
+                user.upd('show_location', True)
                 message = "Список корпусов будет отображаться в раписании"
             else:
-                user = User.update_user(user.id, data=dict(show_location=False))
+                await self.update_user(user.id, data=dict(show_location=False))
+                user.upd('show_location', False)
                 message = "Список корпусов не будет отображаться в раписании"
         else:
             message = strings.ERROR
@@ -581,9 +590,9 @@ class Bot:
         Отправляет время для подписки на расписание
         """
 
-        user = User.update_user(user.id, data=dict(subscription_time=None,
-                                                   subscription_group=None,
-                                                   subscription_days=None))
+        await self.update_user(user.id, data=dict(subscription_time=None,
+                                                  subscription_group=None,
+                                                  subscription_days=None))
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -597,9 +606,9 @@ class Bot:
         Отправляет время для подписки на расписание
         """
 
-        user = User.update_user(user.id, data=dict(subscription_time=const.CHANGES,
-                                                   subscription_group=const.CHANGES,
-                                                   subscription_days=const.CHANGES))
+        await self.update_user(user.id, data=dict(subscription_time=const.CHANGES,
+                                                  subscription_group=const.CHANGES,
+                                                  subscription_days=const.CHANGES))
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -615,9 +624,9 @@ class Bot:
         try:
             time = datetime.datetime.strptime(time, "%H:%M").strftime("%H:%M")
         except ValueError:
-            user = User.update_user(user.id, data=dict(subscription_days=None,
-                                                       subscription_time=None,
-                                                       subscription_group=None))
+            await self.update_user(user.id, data=dict(subscription_days=None,
+                                                      subscription_time=None,
+                                                      subscription_group=None))
             await self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -625,8 +634,8 @@ class Bot:
                 keyboard=Keyboards.schedule_menu(user)
             )
             return user
-        user = User.update_user(user.id, data=dict(subscription_time=time,
-                                                   subscription_group=user.current_name))
+        await self.update_user(user.id, data=dict(subscription_time=time,
+                                                  subscription_group=user.current_name))
         schedule_for = 'группы' if user.role == 'student' else 'преподавателя'
         await self.vk.messages.send(
             peer_id=user.id,
@@ -659,9 +668,9 @@ class Bot:
             subscription_days = const.SUBSCRIPTION_NEXT_WEEK
             day = "следующую неделю"
         else:
-            user = User.update_user(user.id, data=dict(subscription_time=None,
-                                                       subscription_group=None,
-                                                       subscription_days=None))
+            await self.update_user(user.id, data=dict(subscription_time=None,
+                                                      subscription_group=None,
+                                                      subscription_days=None))
             await self.vk.messages.send(
                 peer_id=user.id,
                 random_id=get_random_id(),
@@ -669,7 +678,7 @@ class Bot:
                 keyboard=Keyboards.schedule_menu(user)
             )
             return None
-        user = User.update_user(user.id, data=dict(subscription_days=subscription_days))
+        await self.update_user(user.id, data=dict(subscription_days=subscription_days))
         schedule_for = 'группы' if user.role == 'student' else 'преподавателя'
         await self.vk.messages.send(
             peer_id=user.id,
@@ -714,7 +723,7 @@ class Bot:
             message=message,
             keyboard=Keyboards.back_to_choosing_role()
         )
-        User.update_user(user.id, data=dict(current_name=const.CHANGES, role=role))
+        await self.update_user(user.id, data=dict(current_name=const.CHANGES, role=role))
         return user
 
     async def search(self, user, payload: dict = None):
@@ -727,7 +736,7 @@ class Bot:
         return user
 
     async def search_group(self, user, payload: dict = None):
-        User.update_user(user.id, data=dict(found_id=0, found_name=const.CHANGES, found_type=const.ROLE_STUDENT))
+        await self.update_user(user.id, data=dict(found_id=0, found_name=const.CHANGES, found_type=const.ROLE_STUDENT))
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -737,5 +746,6 @@ class Bot:
         return user
 
     async def cancel(self, user, payload: dict = None):
-        User.cancel_changes(user.id)
+        # async with self.db() as conn:
+        #     await conn.execute(User.cancel_changes(user.id))
         await self.send_schedule_menu(user, payload)
