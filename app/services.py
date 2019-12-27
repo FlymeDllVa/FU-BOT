@@ -6,6 +6,7 @@ from asyncio import Event, sleep
 import schedule
 from aiomisc.service.base import Service
 from aiovk import TokenSession
+from aiovk.drivers import HttpDriver
 
 from app.models import User, UserProxy
 from .dependency import connection
@@ -13,6 +14,15 @@ from .bot import Bot
 from .utils import constants as const
 
 log = logging.getLogger(__name__)
+
+
+class FixedDriver(HttpDriver):
+    async def json(self, url, params, timeout=None):
+        if url.split('/')[-1] == 'messages.send':
+            async with self.session.post(url, data=params, timeout=timeout or self.timeout) as response:
+                return await response.json()
+        async with self.session.get(url, params=params, timeout=timeout or self.timeout) as response:
+            return await response.json()
 
 
 class BotService(Service):
@@ -23,7 +33,7 @@ class BotService(Service):
     db_write: connection
 
     async def start(self):
-        self.session = TokenSession(access_token=self.token)
+        self.session = TokenSession(access_token=self.token, driver=FixedDriver())
         bot = Bot(self.session, group_id=self.group_id, loop=self.loop, db=self.db_write)
         self.loop.create_task(bot.vk_bot_answer_unread())
         while True:
@@ -67,7 +77,7 @@ class BotSubscriptionService(Service):
 
     async def start(self):
         self.exit_event = Event()
-        self.session = TokenSession(access_token=self.token)
+        self.session = TokenSession(access_token=self.token, driver=FixedDriver())
         self.bot = Bot.without_longpool(self.session)
 
         logging.getLogger('schedule').setLevel(logging.WARNING)

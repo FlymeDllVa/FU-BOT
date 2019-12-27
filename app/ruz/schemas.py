@@ -26,7 +26,7 @@ class DateField(fields.Field):
 class Pair(Schema):
     @pre_load()
     def pre_load(self, data, many, **kwargs):
-        data['groups'] = set((data['group'] or data['stream']).replace(' ', '').split(','))
+        data['groups'] = set((data['group'] or data['stream'] or '').replace(' ', '').split(','))
         return data
 
     @post_load()
