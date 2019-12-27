@@ -135,6 +135,29 @@ class Bot:
         except Exception as e:
             log.warning(e)
 
+    async def vk_bot_answer_unread(self):
+        unread = await self.vk.messages.getConversations(filter='unread', count=100)
+        log.info('Answering %s unread messages', unread.get('unread_count', 0))
+        for conversation in unread['items']:
+            # -- Если вдруг понадобится --
+            # payload = json.loads(conversation['last_message']['payload']) if 'payload' in conversation[
+            #     'last_message'] else {}
+            user_id = conversation['last_message']['peer_id']
+            try:
+                # TODO решить что писать людям
+                async with self.db() as conn:
+                    user = await (await conn.execute(User.search_user(user_id))).fetchone()
+                    if user is None:
+                        await conn.execute(User.add_user(user_id))
+                        user = UserProxy(dict(id=user_id))
+                    else:
+                        user = UserProxy(user)
+                # user = User.search_user(user)
+                self.loop.create_task(self.send_schedule_menu(user))
+            except Exception as e:
+                log.warning('Exception in unread: user %s for %s', user_id, e)
+                await self.vk.messages.markAsRead(peer_id=user_id)
+
     """
     Меню расписания
     """
@@ -759,7 +782,8 @@ class Bot:
         return user
 
     async def cancel(self, user, payload: dict = None):
-        # TODO
-        # async with self.db() as conn:
-        #     await conn.execute(User.cancel_changes(user.id))
+        cancel_changes = User.cancel_changes(user.id, user)
+        if cancel_changes is not None:
+            async with self.db() as conn:
+                await conn.execute(cancel_changes)
         await self.send_schedule_menu(user, payload)

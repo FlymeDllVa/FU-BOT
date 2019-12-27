@@ -2,7 +2,7 @@ import logging
 
 import sqlalchemy as sa
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Integer, String, Column, Boolean, MetaData, case
+from sqlalchemy import Integer, String, Column, Boolean, MetaData
 
 from app.utils.constants import CHANGES
 
@@ -18,7 +18,7 @@ class User(db):
 
     id = Column(Integer, primary_key=True, index=True, unique=True)
     role = Column(String(256), default=None)
-    update = Column(String(256), default="1.0")
+    update = Column(String(256), server_default="1.0")
     current_name = Column(String(256), default=None)
     current_id = Column(Integer, default=None)
     schedule_day_date = Column(String(256), default=None)
@@ -35,9 +35,6 @@ class User(db):
     def filter_by_time(cls, time: str) -> sa.sql:
         """
         Ищет всех пользователей с временем подписки time
-
-        :param time:
-        :return:
         """
         return sa.select([
             cls.id,
@@ -52,9 +49,6 @@ class User(db):
     def search_user(cls, id: int) -> sa.sql:
         """
         Ищет пользователя в базе по id
-
-        :param id:
-        :return:
         """
         return sa.select(['*']).select_from(cls.__table__).where(cls.id == id)
 
@@ -68,32 +62,19 @@ class User(db):
     def update_user(cls, id: int, data) -> sa.sql:
         """
         Обновляет поля пользователя поданные как kwargs
-
-        :param user:
-        :param data:
-        :return:
         """
-        print(data)
         sql = cls.__table__.update().values(data).where(cls.id == id)
-        print(sql)
         return sql
 
     @classmethod
-    def cancel_changes(cls, id: int):
+    def cancel_changes(cls, id: int, user: 'UserProxy') -> sa.sql:
+        s = {'current_name', 'found_name', 'subscription_days', 'schedule_day_date'}
+        values = {i: None for i in s if getattr(user, i) == CHANGES}
+        if not values:
+            return
         return cls.__table__.update().values(
-            current_name=case([
-                (cls.current_name == CHANGES, None),
-            ]),
-            found_name=case([
-                (cls.found_name == CHANGES, None),
-            ]),
-            subscription_days=case([
-                (cls.subscription_days == CHANGES, None),
-            ]),
-            schedule_day_date=case([
-                (cls.schedule_day_date == CHANGES, None),
-            ]
-            )).where(cls.id == id)
+            **values
+        ).where(cls.id == id)
 
 
 class DBResultProxy:

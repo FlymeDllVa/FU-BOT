@@ -25,6 +25,7 @@ class BotService(Service):
     async def start(self):
         self.session = TokenSession(access_token=self.token)
         bot = Bot(self.session, group_id=self.group_id, loop=self.loop, db=self.db_write)
+        self.loop.create_task(bot.vk_bot_answer_unread())
         while True:
             await bot.main_loop()
 
@@ -68,10 +69,14 @@ class BotSubscriptionService(Service):
         self.exit_event = Event()
         self.session = TokenSession(access_token=self.token)
         self.bot = Bot.without_longpool(self.session)
-        await self.schedule_distribution()
+
+        logging.getLogger('schedule').setLevel(logging.WARNING)
+
+        def distribution():
+            asyncio.run_coroutine_threadsafe(self.schedule_distribution(), self.loop)
 
         schedule.every().minute.at(":00").do(
-            asyncio.run_coroutine_threadsafe, self.schedule_distribution(), self.loop
+            distribution
         )
         while not self.exit_event.is_set():
             schedule.run_pending()
