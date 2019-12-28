@@ -1,8 +1,10 @@
+ujson
+aiohttp
+aiomysql
+aiovk
+aiomisc
 alembic
 marshmallow
-mysql-connector-python
-requests
 schedule
 SQLAlchemy
-urllib3
 vk-api
