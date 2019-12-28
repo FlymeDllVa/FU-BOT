@@ -36,27 +36,27 @@ class User(db):
         """
         Ищет всех пользователей с временем подписки time
         """
-        return sa.select([
-            cls.id,
-            cls.current_id,
-            cls.role,
-            cls.show_location,
-            cls.show_groups,
-            cls.subscription_days
-        ]).where(cls.subscription_time == time)
+        return sa.select(
+            [
+                cls.id,
+                cls.current_id,
+                cls.role,
+                cls.show_location,
+                cls.show_groups,
+                cls.subscription_days,
+            ]
+        ).where(cls.subscription_time == time)
 
     @classmethod
     def search_user(cls, id: int) -> sa.sql:
         """
         Ищет пользователя в базе по id
         """
-        return sa.select(['*']).select_from(cls.__table__).where(cls.id == id)
+        return sa.select(["*"]).select_from(cls.__table__).where(cls.id == id)
 
     @classmethod
     def add_user(cls, id: int) -> sa.sql:
-        return cls.__table__.insert().values([
-            dict(id=id)
-        ])
+        return cls.__table__.insert().values([dict(id=id)])
 
     @classmethod
     def update_user(cls, id: int, data) -> sa.sql:
@@ -67,14 +67,12 @@ class User(db):
         return sql
 
     @classmethod
-    def cancel_changes(cls, id: int, user: 'UserProxy') -> sa.sql:
-        s = {'current_name', 'found_name', 'subscription_days', 'schedule_day_date'}
+    def cancel_changes(cls, id: int, user: "UserProxy") -> sa.sql:
+        s = {"current_name", "found_name", "subscription_days", "schedule_day_date"}
         values = {i: None for i in s if getattr(user, i) == CHANGES}
         if not values:
             return
-        return cls.__table__.update().values(
-            **values
-        ).where(cls.id == id)
+        return cls.__table__.update().values(**values).where(cls.id == id)
 
 
 class DBResultProxy:
@@ -89,11 +87,15 @@ class DBResultProxy:
 
     def upd(self, key, value):
         if key not in self._table:
-            raise KeyError('Unknown field')
+            raise KeyError("Unknown field")
         self._fields[key] = value
 
     def __repr__(self):
-        return f'<{__class__} ' + "; ".join(f'{i}: {repr(getattr(self, i))}' for i in self._table) + '>'
+        return (
+            f"<{__class__} "
+            + "; ".join(f"{i}: {repr(getattr(self, i))}" for i in self._table)
+            + ">"
+        )
 
 
 class UserProxy(DBResultProxy):

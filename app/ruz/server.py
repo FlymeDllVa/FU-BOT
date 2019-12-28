@@ -1,11 +1,13 @@
-import logging
+from asyncio import TimeoutError
 import datetime
+import logging
 from urllib.parse import quote
 
 from marshmallow import ValidationError
 from aiohttp import ClientSession, ClientTimeout, ContentTypeError
 
 from app.ruz.schemas import ScheduleSchema
+
 # from app.ruz.cache import timed_cache
 
 SCHEDULE_SCHEMA = ScheduleSchema()
@@ -28,7 +30,7 @@ class Data:
         self.error_text = error
 
     @classmethod
-    def error(cls, error: str) -> 'Data':
+    def error(cls, error: str) -> "Data":
         return cls(data={}, has_error=True, error=error)
 
 
@@ -40,7 +42,15 @@ def date_name(date: datetime) -> str:
     :return:
     """
 
-    return ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота", "Воскресенье"][date.weekday()]
+    return [
+        "Понедельник",
+        "Вторник",
+        "Среда",
+        "Четверг",
+        "Пятница",
+        "Суббота",
+        "Воскресенье",
+    ][date.weekday()]
 
 
 # @timed_cache(minutes=180)
@@ -53,18 +63,23 @@ async def get_group(group_name: str) -> Data:
     """
     try:
         async with ClientSession() as client:
-            request = await client.get(f"https://ruz.fa.ru/api/search?term={quote(group_name)}&type=group", timeout=2)
+            request = await client.get(
+                f"https://ruz.fa.ru/api/search?term={quote(group_name)}&type=group",
+                timeout=2,
+            )
             found_group = await request.json()
-    except (ClientTimeout, ContentTypeError):
-        return Data.error('Timeout error')
-    if found_group and found_group[0]['label'].strip().upper() == group_name:
-        return Data(found_group[0]['id'])
+    except (ClientTimeout, TimeoutError, ContentTypeError):
+        return Data.error("Timeout error")
+    if found_group and found_group[0]["label"].strip().upper() == group_name:
+        return Data(found_group[0]["id"])
     else:
-        return Data.error('Not found')
+        return Data.error("Not found")
 
 
 # @timed_cache(minutes=2)
-async def get_schedule(id: int, date_start: datetime = None, date_end: datetime = None, type: str = 'group') -> Data:
+async def get_schedule(
+    id: int, date_start: datetime = None, date_end: datetime = None, type: str = "group"
+) -> Data:
     """
     Запрашивает расписание у сервера
     :param id:
@@ -79,20 +94,22 @@ async def get_schedule(id: int, date_start: datetime = None, date_end: datetime 
         date_start = datetime.datetime.today()
     if not date_end:
         date_end = datetime.datetime.today() + datetime.timedelta(days=1)
-    url = f"https://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}" \
-          f"&finish={date_end.strftime('%Y.%m.%d')}&lng=1"
+    url = (
+        f"https://ruz.fa.ru/api/schedule/{type}/{id}?start={date_start.strftime('%Y.%m.%d')}"
+        f"&finish={date_end.strftime('%Y.%m.%d')}&lng=1"
+    )
     try:
         async with ClientSession() as client:
             request = await client.get(url)
             request_json = await request.json()
-    except (ClientTimeout, ContentTypeError):
-        return Data.error('Timeout error')
+    except (ClientTimeout, TimeoutError, ContentTypeError):
+        return Data.error("Timeout error")
     try:
-        res = SCHEDULE_SCHEMA.load({'pairs': request_json})
+        res = SCHEDULE_SCHEMA.load({"pairs": request_json})
         return Data(res)
     except ValidationError as e:
-        log.warning('Validation error in get_schedule for %s %s - %r', type, id, e)
-        return Data.error('validation error')
+        log.warning("Validation error in get_schedule for %s %s - %r", type, id, e)
+        return Data.error("validation error")
 
 
 # @timed_cache(minutes=180)
@@ -105,17 +122,26 @@ async def get_teacher(teacher_name: str) -> list or None:
     """
     try:
         async with ClientSession() as client:
-            request = await client.get(f"https://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=lecturer",
-                                       timeout=2)
+            request = await client.get(
+                f"https://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=lecturer",
+                timeout=2,
+            )
             request_json = await request.json()
-    except (ClientTimeout, ContentTypeError):
-        return Data.error('Timeout error')
-    teachers = [(i['id'], i['label']) for i in request_json if i['id']]
+    except (ClientTimeout, TimeoutError, ContentTypeError):
+        return Data.error("Timeout error")
+    teachers = [(i["id"], i["label"]) for i in request_json if i["id"]]
     return Data(teachers)
 
 
-async def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1, show_groups: bool = False,
-                          show_location: bool = False, text: str = "") -> str or None:
+async def format_schedule(
+    id: int,
+    type: str,
+    start_day: int = 0,
+    days: int = 1,
+    show_groups: bool = False,
+    show_location: bool = False,
+    text: str = "",
+) -> str or None:
     """
     Форматирует расписание к виду который отправляет бот
 
@@ -130,8 +156,9 @@ async def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1,
     """
     date_start = datetime.datetime.now() + datetime.timedelta(days=start_day)
     date_end = date_start + datetime.timedelta(days=days)
-    schedule = await get_schedule(id, date_start, date_end,
-                                  type='lecturer' if type == 'teacher' else 'group')
+    schedule = await get_schedule(
+        id, date_start, date_end, type="lecturer" if type == "teacher" else "group"
+    )
     if schedule.has_error:
         return None
     else:
@@ -139,31 +166,31 @@ async def format_schedule(id: int, type: str, start_day: int = 0, days: int = 1,
     date = datetime.datetime.today()
     date += datetime.timedelta(days=start_day)
     for _ in range(days):
-        text_date = date.strftime('%d.%m.%Y')
+        text_date = date.strftime("%d.%m.%Y")
         text += f"📅 {date_name(date)}, {text_date}\n"
         if text_date in schedule:
             selected_days = set()
-            for lesson in sorted(schedule[text_date], key=lambda x: x['time_start']):
-                if lesson['time_start'] in selected_days:
+            for lesson in sorted(schedule[text_date], key=lambda x: x["time_start"]):
+                if lesson["time_start"] in selected_days:
                     text += "\n"
                 else:
                     text += f"\n⏱{lesson['time_start']} – {lesson['time_end']}⏱\n"
-                    selected_days.add(lesson['time_start'])
+                    selected_days.add(lesson["time_start"])
                 text += f"{lesson['name']}\n"
-                if lesson['type']:
+                if lesson["type"]:
                     text += f"{lesson['type']}\n"
-                if show_groups and lesson['groups']:
-                    if lesson['groups']:
+                if show_groups and lesson["groups"]:
+                    if lesson["groups"]:
                         text += "Группы: "
                         text += f"{', '.join(lesson['groups'])}\n"
-                if lesson['audience']:
+                if lesson["audience"]:
                     text += f"Где: {lesson['audience']}"
-                if show_location and lesson['location'] is not None:
+                if show_location and lesson["location"] is not None:
                     text += f", {lesson['location']}\n"
                 else:
                     text += "\n"
                 text += f"Кто: {lesson['teachers_name']}\n"
-                if lesson['note']:
+                if lesson["note"]:
                     text += f'Примечание: {lesson["note"]}\n'
         else:
             text += f"Нет пар\n"

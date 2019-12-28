@@ -12,11 +12,9 @@ log = logging.getLogger(__name__)
 def start_app(config: dict):
     config_dependency(config)
     with entrypoint(
-            BotService(
-                token=config['vk_token'],
-                group_id=config['vk_group_id']),
-            BotSubscriptionService(token=config['vk_token']),
-            log_level=logging.DEBUG if config['debug'] else logging.INFO
+        BotService(token=config["vk_token"], group_id=config["vk_group_id"]),
+        BotSubscriptionService(token=config["vk_token"]),
+        log_level=logging.DEBUG if config["debug"] else logging.INFO,
     ) as loop:
-        log.info('Bot started')
+        log.info("Bot started")
         loop.run_forever()

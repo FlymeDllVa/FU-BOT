@@ -10,10 +10,16 @@ def config_dependency(config):
     @dependency
     async def db_write() -> connection:
         engine = await create_engine(
-            maxsize=50, pool_recycle=config['db_connect_timeout'],
-            host=config['db_host'], user=config['db_user'], password=config['db_pass'],
-            db=config['db_database'], port=config['db_port'], autocommit=True,
-            connect_timeout=config['db_connect_timeout'], echo=True if config['debug'] else False
+            maxsize=50,
+            pool_recycle=config["db_connect_timeout"],
+            host=config["db_host"],
+            user=config["db_user"],
+            password=config["db_pass"],
+            db=config["db_database"],
+            port=config["db_port"],
+            autocommit=True,
+            connect_timeout=config["db_connect_timeout"],
+            echo=True if config["debug"] else False,
         )
         yield engine.acquire
         engine.close()
