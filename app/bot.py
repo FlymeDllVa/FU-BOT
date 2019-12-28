@@ -203,38 +203,7 @@ class Bot:
             start_day = 7 - datetime.datetime.now().isoweekday() + 1
         schedule = await format_schedule(user.current_id, user.role, start_day=start_day, days=days, text=text,
                                          show_groups=user.show_groups, show_location=user.show_location)
-        if schedule == "'Connection error'":
-            log.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
-            await self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message="Не удалось подключиться с информационно образовательному порталу",
-            )
-            return None
-        elif schedule == "Not found":
-            await self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message="Расписание не найдено",
-            )
-            return None
-        elif schedule == "Refreshes":
-            await self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message="Расписание обновляется. Попробуйте позже",
-            )
-            return None
-        elif schedule == "Error":
-            log.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
-            await self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message="Ошибка получения расписания. Попробуйте заново выбрать группу в настройках или "
-                        "обратитесь к администрации",
-            )
-            return None
-        elif schedule is None:
+        if schedule is None:
             log.warning('Error getting schedule: user %s for %s', user.id, user.current_name)
             await self.vk.messages.send(
                 peer_id=user.id,
