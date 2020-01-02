@@ -1,7 +1,6 @@
 MENU_SCHEDULE = "send_schedule_menu"
 MENU_SCHEDULE_SHOW = "send_schedule"
 MENU_SCHEDULE_SHOW_ONE = "send_one_day_schedule"
-MENU_SEARCH_TEACHER = "send_search_teacher"
 MENU_TEACHER = "send_teacher"
 MENU_SCHEDULE_FOUND = "send_teacher_schedule"
 MENU_SETTINGS = "send_settings_menu"
@@ -12,9 +11,14 @@ MENU_UNSUBSCRIBE = "unsubscribe_schedule"
 MENU_UPDATE_SUBSCRIPTION = "update_subscribe_day"
 MENU_CANCEL = "cancel"
 MENU_CHOOSE_ROLE = "set_role"
-MENU_SET_TEACHER = "set_teacher"
 MENU_SEARCH = "search"
+MENU_SEND_SEARCH = "send_search"
+MENU_SET_TEACHER = "set_teacher"
+MENU_CALENDAR = 'calendar_link'
+
+# LEGACY
 MENU_SEARCH_GROUP = "search_group"
+MENU_SEARCH_TEACHER = "send_search_teacher"
 
 MENUS_LIST = (
     MENU_SCHEDULE,
@@ -34,6 +38,8 @@ MENUS_LIST = (
     MENU_SET_TEACHER,
     MENU_SEARCH,
     MENU_SEARCH_GROUP,
+    MENU_SEND_SEARCH,
+    MENU_CALENDAR
 )
 
 ROLE_TEACHER = "teacher"

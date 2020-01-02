@@ -1,10 +1,9 @@
-from asyncio import TimeoutError
 import datetime
 import logging
 from urllib.parse import quote
 
 from marshmallow import ValidationError
-from aiohttp import ClientSession, ClientTimeout, ContentTypeError
+from aiohttp import ClientSession, ClientError
 
 from app.ruz.schemas import ScheduleSchema
 
@@ -68,7 +67,7 @@ async def get_group(group_name: str) -> Data:
                 timeout=2,
             )
             found_group = await request.json()
-    except (ClientTimeout, TimeoutError, ContentTypeError):
+    except ClientError:
         return Data.error("Timeout error")
     if found_group and found_group[0]["label"].strip().upper() == group_name:
         return Data(found_group[0]["id"])
@@ -102,7 +101,7 @@ async def get_schedule(
         async with ClientSession() as client:
             request = await client.get(url)
             request_json = await request.json()
-    except (ClientTimeout, TimeoutError, ContentTypeError):
+    except ClientError:
         return Data.error("Timeout error")
     try:
         res = SCHEDULE_SCHEMA.load({"pairs": request_json})
@@ -127,7 +126,7 @@ async def get_teacher(teacher_name: str) -> list or None:
                 timeout=2,
             )
             request_json = await request.json()
-    except (ClientTimeout, TimeoutError, ContentTypeError):
+    except ClientError:
         return Data.error("Timeout error")
     teachers = [(i["id"], i["label"]) for i in request_json if i["id"]]
     return Data(teachers)

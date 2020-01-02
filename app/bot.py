@@ -3,6 +3,7 @@ import datetime
 import random
 import logging
 from asyncio import AbstractEventLoop
+from urllib.parse import urlencode
 
 import ujson
 from aiovk import API
@@ -14,7 +15,7 @@ from app.models import User, UserProxy
 import app.utils.constants as const
 from app.ruz.server import format_schedule, get_group, get_teacher
 from app.utils import strings
-from app.utils.keyboards import Keyboards
+import app.utils.keyboards as keyboards
 
 log = logging.getLogger(__name__)
 
@@ -195,7 +196,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.CHOOSE_MENU,
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
         return user
 
@@ -257,7 +258,7 @@ class Bot:
         await self.send_msg(
             peer_id=user.id,
             message=schedule,
-            keyboard=Keyboards.inline_date(inline_keyboard_date)
+            keyboard=keyboards.inline_date(inline_keyboard_date)
             if inline_keyboard_date is not None
             else None,
         )
@@ -275,7 +276,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=strings.WRITE_DATE,
-            keyboard=Keyboards.empty_keyboard(),
+            keyboard=keyboards.empty_keyboard(),
         )
         return user
 
@@ -303,7 +304,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.INCORRECT_DATE,
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
             return user
         start_day = (date - datetime.datetime.today() + datetime.timedelta(days=1)).days
@@ -321,16 +322,16 @@ class Bot:
                 message=strings.CANT_FIND_SCHEDULE_BY_DATE.format(
                     date.strftime("%d.%m.%Y")
                 ),
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
             return user
         await self.send_msg(
-            peer_id=user.id, message=schedule, keyboard=Keyboards.inline_date(date)
+            peer_id=user.id, message=schedule, keyboard=keyboards.inline_date(date)
         )
         await self.send_msg(
             peer_id=user.id,
             message=strings.CHOOSE_MENU,
-            keyboard=Keyboards.schedule_menu(user),
+            keyboard=keyboards.schedule_menu(user),
         )
         return user
 
@@ -350,7 +351,7 @@ class Bot:
         self, user: UserProxy, group_name: str
     ) -> None or UserProxy:
         """
-        Проверяет существует ли группа
+        Проверяет существует ли группа при установке пользователя
         """
 
         group_name = group_name.strip().replace(" ", "").upper()
@@ -369,7 +370,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.GROUP_CHANGED_FOR.format(group_name),
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
             return user
         else:
@@ -380,14 +381,14 @@ class Bot:
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=f"Не удалось сменить группу. Попробуйте позже",
-                    keyboard=Keyboards.back_to_choosing_role(),
+                    keyboard=keyboards.back_to_choosing_role(),
                 )
             elif group.error_text == "Not found":
                 await self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=strings.GROUP_NOT_FOUND.format(group_name),
-                    keyboard=Keyboards.back_to_choosing_role(),
+                    keyboard=keyboards.back_to_choosing_role(),
                 )
                 return user
             else:
@@ -401,7 +402,7 @@ class Bot:
         self, user: UserProxy, group_name: str
     ) -> None or UserProxy:
         """
-        Проверяет существует ли группа
+        Проверяет существует ли группа при поиске
 
         :param user:
         :param group_name:
@@ -418,7 +419,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.GROUP.format(group_name),
-                keyboard=Keyboards.find_schedule_menu(user),
+                keyboard=keyboards.find_schedule_menu(user),
             )
             return user
         else:
@@ -429,14 +430,14 @@ class Bot:
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=f"Не удалось найти группу. Попробуйте позже",
-                    keyboard=Keyboards.schedule_menu(user),
+                    keyboard=keyboards.schedule_menu(user),
                 )
             elif group.error_text == "Not found":
                 await self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=strings.GROUP_NOT_FOUND.format(group_name),
-                    keyboard=Keyboards.schedule_menu(user),
+                    keyboard=keyboards.schedule_menu(user),
                 )
                 return user
 
@@ -444,34 +445,51 @@ class Bot:
     Поиск преподавателя
     """
 
-    async def send_search_teacher(
-        self, user: UserProxy, payload: dict = None
-    ) -> UserProxy:
-        """
-        Отправляет сообщение с просьбой ввести ФИО преподавателя
-
-        :param user:
-        :param payload:
-        :return:
-        """
-
+    async def send_search(self, user: UserProxy, payload: dict = None) -> UserProxy:
+        if payload[const.PAYLOAD_ROLE] == const.ROLE_TEACHER:
+            found_type = const.ROLE_TEACHER
+            message = strings.WRITE_TEACHER
+        elif payload[const.PAYLOAD_ROLE] == const.ROLE_STUDENT:
+            found_type = const.ROLE_STUDENT
+            message = strings.WRITE_GROUP
+        else:
+            return user
         await self.update_user(
             user.id,
-            data=dict(
-                found_id=0, found_name=const.CHANGES, found_type=const.ROLE_TEACHER
-            ),
+            data=dict(found_id=0, found_name=const.CHANGES, found_type=found_type),
         )
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
-            message=strings.WRITE_TEACHER,
-            keyboard=Keyboards.empty_keyboard(),
+            message=message,
+            keyboard=keyboards.empty_keyboard(),
         )
         return user
+
+    # LEGACY
+    async def send_search_teacher(
+        self, user: UserProxy, payload: dict = None
+    ) -> UserProxy:
+        if payload is None:
+            payload = {}
+        payload.update({const.PAYLOAD_ROLE: const.ROLE_TEACHER})
+        return await self.send_search(user, payload)
+
+    # LEGACY
+    async def search_group(self, user, payload: dict = None):
+        if payload is None:
+            payload = {}
+        payload.update({const.PAYLOAD_ROLE: const.ROLE_STUDENT})
+        return await self.send_search(user, payload)
 
     async def search_teacher_schedule(
         self, user: UserProxy, teacher_name: str
     ) -> UserProxy or None:
+        """
+        Для установки преподавателя через поиск
+        Если найден только один преподаватель устанавливает его и отправляет клавиатуру расписания
+        Если найдено несколько, то отправляет клавиатуру выбота преподавателя
+        """
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
@@ -486,7 +504,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message="Не удалось подключиться к информационно образовательному порталу. Попробуйте позже",
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
         elif teachers.data:
             teachers = teachers.data
@@ -501,14 +519,14 @@ class Bot:
                     message=strings.FOUND_TEACHER.format(teachers[0][1])
                     + "\n"
                     + strings.CHOOSE_TIMEDELTA,
-                    keyboard=Keyboards.find_schedule_menu(user),
+                    keyboard=keyboards.find_schedule_menu(user),
                 )
             else:
                 await self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=strings.CHOOSE_CURRENT_TEACHER,
-                    keyboard=Keyboards.found_list(teachers),
+                    keyboard=keyboards.found_list(teachers),
                 )
                 return user
         else:
@@ -519,7 +537,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.TEACHER_NOT_FOUND,
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
             return None
 
@@ -538,7 +556,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message="Не удалось подключиться к информационно образовательному порталу. Попробуйте позже",
-                keyboard=Keyboards.back_to_choosing_role(),
+                keyboard=keyboards.back_to_choosing_role(),
             )
         elif teachers.data:
             teachers = teachers.data
@@ -556,14 +574,14 @@ class Bot:
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=strings.FOUND_TEACHER.format(teachers[0][1]),
-                    keyboard=Keyboards.schedule_menu(user),
+                    keyboard=keyboards.schedule_menu(user),
                 )
             else:
                 await self.vk.messages.send(
                     peer_id=user.id,
                     random_id=get_random_id(),
                     message=strings.CHOOSE_CURRENT_TEACHER,
-                    keyboard=Keyboards.found_list(teachers, to_set=True),
+                    keyboard=keyboards.found_list(teachers, to_set=True),
                 )
                 return user
         else:
@@ -572,7 +590,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.TEACHER_NOT_FOUND,
-                keyboard=Keyboards.back_to_choosing_role(),
+                keyboard=keyboards.back_to_choosing_role(),
             )
             return None
 
@@ -590,7 +608,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=strings.FOUND_TEACHER.format(payload[const.PAYLOAD_FOUND_NAME]),
-            keyboard=Keyboards.schedule_menu(user),
+            keyboard=keyboards.schedule_menu(user),
         )
 
     async def send_teacher(self, user, payload: dict = None):
@@ -609,7 +627,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.CHOOSE_TIMEDELTA,
-                keyboard=Keyboards.find_schedule_menu(user),
+                keyboard=keyboards.find_schedule_menu(user),
             )
         else:
             await self.update_user(
@@ -619,9 +637,10 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.CANT_FIND_USER,
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
 
+    # TODO Менять на send_search_schedule
     async def send_teacher_schedule(
         self, user: UserProxy, start_day: int = 0, days: int = 1, payload: dict = None
     ) -> UserProxy or None:
@@ -648,7 +667,7 @@ class Bot:
         await self.send_msg(
             peer_id=user.id,
             message=schedule or strings.CANT_GET_SCHEDULE,
-            keyboard=Keyboards.schedule_menu(user),
+            keyboard=keyboards.schedule_menu(user),
         )
         return user
 
@@ -688,7 +707,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=message,
-            keyboard=Keyboards.settings_menu(user),
+            keyboard=keyboards.settings_menu(user),
         )
         return user
 
@@ -703,7 +722,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=strings.WHAT_TO_SET,
-            keyboard=Keyboards.settings_menu(user),
+            keyboard=keyboards.settings_menu(user),
         )
         return user
 
@@ -728,7 +747,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=f"Вы отписались от рассылки расписания",
-            keyboard=Keyboards.schedule_menu(user),
+            keyboard=keyboards.schedule_menu(user),
         )
         return user
 
@@ -751,7 +770,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message="Напишите или выберите время в которое хотите получать раписание\n\nНапример: «12:35»",
-            keyboard=Keyboards.subscribe_to_schedule_start_menu(user),
+            keyboard=keyboards.subscribe_to_schedule_start_menu(user),
         )
         return user
 
@@ -776,7 +795,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=strings.INCORRECT_DATE_FORMAT,
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
             return user
         await self.update_user(
@@ -789,7 +808,7 @@ class Bot:
             random_id=get_random_id(),
             message=f"Формируем расписания для {schedule_for} {user.current_name} в {time}\nВыберите период, на который вы "
             f"хотите получать расписание",
-            keyboard=Keyboards.subscribe_to_schedule_day_menu(user),
+            keyboard=keyboards.subscribe_to_schedule_day_menu(user),
         )
         return user
 
@@ -829,7 +848,7 @@ class Bot:
                 peer_id=user.id,
                 random_id=get_random_id(),
                 message=f"Не удалось добавить в рассылку расписания",
-                keyboard=Keyboards.schedule_menu(user),
+                keyboard=keyboards.schedule_menu(user),
             )
             return None
         await self.update_user(user.id, data=dict(subscription_days=subscription_days))
@@ -839,7 +858,7 @@ class Bot:
             random_id=get_random_id(),
             message=f"Вы подписались на раписание {schedule_for} {user.subscription_group}\nТеперь каждый день в "
             f"{user.subscription_time} вы будете получать расписание на {day}",
-            keyboard=Keyboards.schedule_menu(user),
+            keyboard=keyboards.schedule_menu(user),
         )
         return user
 
@@ -847,24 +866,29 @@ class Bot:
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
-            message="Инструкция по добавлению подписки"
-            "\nДля iPhone"
-            "\nНастройки ▶ Почта, Контакты, Календарь ▶ Добавить учетную запись ▶ Другое ▶ Добавить подписной "
-            "календарь ▶ вставить адрес календаря "
-            "\n\nДля Android"
-            "\nВставить адрес календаря в https://calendar.google.com/calendar/r/settings/addbyurl ▶ Открыть "
-            "(скачать) Google Календарь ▶ Настройки ▶ FU Schedule ▶ Синхронизация\n\n\n"
-            f"Ссылка на календарь для подписки: https://bot.fa.ru/calendar/{'group' if user.role == 'student' else 'lecturer'}/{user.current_id}",
-            keyboard=Keyboards.schedule_menu(user),
+            message="(¬‿¬)",
+            keyboard=keyboards.schedule_menu(user),
         )
         return user
+
+    async def calendar_link(self, user: UserProxy, **kwargs):
+        query = urlencode(
+            {
+                "name": user.current_name,
+                "type": "group" if user.role == "student" else "lecturer",
+                "id": user.current_id,
+            }
+        )
+        await self.send_msg(
+            user.id, f"https://schedule.fa.ru/?{query}",
+        )
 
     async def change_role(self, user: UserProxy, payload: dict = None):
         await self.vk.messages.send(
             peer_id=user.id,
             random_id=get_random_id(),
             message=strings.WELCOME,
-            keyboard=Keyboards.choose_role(),
+            keyboard=keyboards.choose_role(),
         )
         return user
 
@@ -879,7 +903,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=message,
-            keyboard=Keyboards.back_to_choosing_role(),
+            keyboard=keyboards.back_to_choosing_role(),
         )
         await self.update_user(
             user.id, data=dict(current_name=const.CHANGES, role=role)
@@ -891,22 +915,7 @@ class Bot:
             peer_id=user.id,
             random_id=get_random_id(),
             message=strings.WHAT_TO_FIND,
-            keyboard=Keyboards.search_menu(),
-        )
-        return user
-
-    async def search_group(self, user, payload: dict = None):
-        await self.update_user(
-            user.id,
-            data=dict(
-                found_id=0, found_name=const.CHANGES, found_type=const.ROLE_STUDENT
-            ),
-        )
-        await self.vk.messages.send(
-            peer_id=user.id,
-            random_id=get_random_id(),
-            message=strings.WRITE_GROUP,
-            keyboard=Keyboards.empty_keyboard(),
+            keyboard=keyboards.search_menu(),
         )
         return user
 

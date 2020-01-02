@@ -1,10 +1,11 @@
-ujson
 aiohttp
+aiomisc
+aiomisc_dependency
 aiomysql
 aiovk
-aiomisc
 alembic
 marshmallow
 schedule
 SQLAlchemy
+ujson
 vk-api
