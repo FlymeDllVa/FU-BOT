@@ -32,8 +32,17 @@ class FixedDriver(HttpDriver):
                 return await response.json(loads=loads)
         except (ClientError, TimeoutError):
             log.warning("Vk Timeout error on url %s", url)
-            await sleep(1)
-            await self.json(url, params, timeout)
+            await sleep(5)
+            return await self.json(url, params, timeout)
+
+    async def get_text(self, url, params, timeout=None):
+        try:
+            async with self.session.get(url, params=params, timeout=timeout or self.timeout) as response:
+                return response.status, await response.text()
+        except (ClientError, TimeoutError):
+            log.warning("Vk Timeout error on url %s", url)
+            await sleep(5)
+            return await self.get_text(url, params, timeout)
 
 
 class BotService(Service):
