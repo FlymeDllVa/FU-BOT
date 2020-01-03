@@ -7,9 +7,9 @@ WRITE_DATE = (
 )
 
 WHAT_TO_SET = "Выберите в меню, что требуется настроить"
-WHAT_TO_FIND = "Выбери что искать"
+WHAT_TO_FIND = "Выберите что искать"
 
-WRITE_GROUP = "Введи название группы"
+WRITE_GROUP = "Введите название группы"
 WRITE_TEACHER = "Введите фамилию или ФИО преподавателя"
 
 SEARCHING_FOR_TEACHER = "Ищем преподавателя"
@@ -24,6 +24,7 @@ INCORRECT_DATE_FORMAT = (
 )
 CANT_FIND_USER = "Не удалось найти пользователя"
 CANT_GET_SCHEDULE = "Не удалось получить расписание"
+TIMEOUT_ERROR = "Не удалось подключиться к сервису расписаний(. Попробуйте позже"
 ERROR = "Ошибка"
 
 CANT_FIND_SCHEDULE_BY_DATE = "Не удалось найти расписание на {}"

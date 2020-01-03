@@ -14,7 +14,7 @@ MENU_CHOOSE_ROLE = "set_role"
 MENU_SEARCH = "search"
 MENU_SEND_SEARCH = "send_search"
 MENU_SET_TEACHER = "set_teacher"
-MENU_CALENDAR = 'calendar_link'
+MENU_CALENDAR = "calendar_link"
 
 # LEGACY
 MENU_SEARCH_GROUP = "search_group"
@@ -39,7 +39,7 @@ MENUS_LIST = (
     MENU_SEARCH,
     MENU_SEARCH_GROUP,
     MENU_SEND_SEARCH,
-    MENU_CALENDAR
+    MENU_CALENDAR,
 )
 
 ROLE_TEACHER = "teacher"

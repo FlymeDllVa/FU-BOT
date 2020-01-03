@@ -1,13 +1,14 @@
 import asyncio
 import logging
 import time
-from asyncio import Event, sleep
+from asyncio import Event, sleep, TimeoutError
 
 import schedule
 from aiomisc.service.base import Service
 from aiovk import TokenSession
 from aiovk.drivers import HttpDriver
 from aiohttp import ClientError
+from ujson import loads
 
 from app.models import User, UserProxy
 from .dependency import connection
@@ -24,12 +25,12 @@ class FixedDriver(HttpDriver):
                 async with self.session.post(
                     url, data=params, timeout=timeout or self.timeout
                 ) as response:
-                    return await response.json()
+                    return await response.json(loads=loads)
             async with self.session.get(
                 url, params=params, timeout=timeout or self.timeout
             ) as response:
-                return await response.json()
-        except ClientError:
+                return await response.json(loads=loads)
+        except (ClientError, TimeoutError):
             log.warning("Vk Timeout error on url %s", url)
             await sleep(1)
             await self.json(url, params, timeout)

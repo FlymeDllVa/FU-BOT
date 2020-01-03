@@ -8,4 +8,5 @@ marshmallow
 schedule
 SQLAlchemy
 ujson
+uvloop
 vk-api
