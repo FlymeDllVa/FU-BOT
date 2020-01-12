@@ -1,0 +1,34 @@
+version: '3.2'
+
+services:
+  bot:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: python3 /mnt/start.py
+    volumes:
+      - .:/mnt
+    working_dir: /mnt/
+    network_mode: host
+    environment:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: password
+      DB_DATABASE: bot
+      DB_TIMEOUT: 18000
+      VK_TOKEN: default-token
+      GROUP_ID: default-group
+      DEBUG: "True"
+
+  mysql_db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    expose:
+      - 3306
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db

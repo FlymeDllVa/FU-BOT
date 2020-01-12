@@ -1,0 +1,16 @@
+version: '3.2'
+
+services:
+  bot:
+    image: docker.pkg.github.com/flymedllva/aio-fu-bot-vk/bot
+    command: python3 /mnt/start.py
+    environment:
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASS: password
+      DB_DATABASE: bot
+      DB_TIMEOUT: 18000
+      VK_TOKEN: token
+      GROUP_ID: group
+      DEBUG: "False"
