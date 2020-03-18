@@ -133,9 +133,9 @@ class Bot:
             else:
                 await self.send_schedule_menu(user)
 
-    async def send_msg(self, peer_id, message, keyboard=None):
+    async def send_msg(self, peer_id, message, keyboard=None, dont_parse_links=True):
         try:
-            args = {"peer_id": peer_id}
+            args = {"peer_id": peer_id, "dont_parse_links": int(dont_parse_links)}
             if keyboard is not None:
                 args.update({"keyboard": keyboard})
             for message_part in [
@@ -801,7 +801,7 @@ class Bot:
             }
         )
         log.info("%s asked for calendar for group %s", user.id, user.current_name)
-        await self.send_msg(user.id, f"https://schedule.fa.ru/?{query}")
+        await self.send_msg(user.id, f"https://schedule.fa.ru/?{query}", dont_parse_links=False)
 
     async def change_role(self, user: UserProxy, payload: dict = None):
         await self.send_msg(user.id, strings.WELCOME, keyboards.choose_role())
