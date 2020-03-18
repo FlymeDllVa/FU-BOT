@@ -17,8 +17,10 @@ services:
       DB_PASS: password
       DB_DATABASE: bot
       DB_TIMEOUT: 18000
-      VK_TOKEN: default-token
-      GROUP_ID: default-group
+#      VK_TOKEN: default-token
+#      GROUP_ID: default-group
+      VK_TOKEN: 97d0fb8a89e891819942c11c5ada66c40d7830b6eaf532e313d7cdd754d90f190fbbb4e3e71b91717e27d
+      GROUP_ID: 185809180
       DEBUG: "True"
 
   mysql_db:

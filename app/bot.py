@@ -9,6 +9,7 @@ import ujson
 from aiovk import API
 from aiovk.longpoll import BotsLongPoll
 from aiovk.sessions import BaseSession
+from pymysql import OperationalError
 
 from app.dependency import connection
 from app.models import User, UserProxy
@@ -80,13 +81,16 @@ class Bot:
             self.loop.create_task(self.handle_new_message(event))
 
     async def handle_new_message(self, msg: BotResponse):
-        async with self.db() as conn:
-            user = await (await conn.execute(User.search_user(msg.peer_id))).fetchone()
-            if user is None:
-                await conn.execute(User.add_user(msg.peer_id))
-                user = UserProxy(dict(id=msg.peer_id))
-            else:
-                user = UserProxy(user)
+        try:
+            async with self.db() as conn:
+                user = await (await conn.execute(User.search_user(msg.peer_id))).fetchone()
+                if user is None:
+                    await conn.execute(User.add_user(msg.peer_id))
+                    user = UserProxy(dict(id=msg.peer_id))
+                else:
+                    user = UserProxy(user)
+        except OperationalError:
+            await self.send_msg(msg.peer_id, "У нас что-то пошло не по плану, попробуй написать позже...")
         log.debug("New %r", user)
         payload = ujson.loads(msg.payload if "payload" in msg else "{}")
         message = msg.text.lower()

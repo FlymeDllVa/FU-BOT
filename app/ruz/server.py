@@ -193,6 +193,10 @@ async def format_schedule(
                 text += f"Кто: {lesson['teachers_name']}\n"
                 if lesson["note"]:
                     text += f'Примечание: {lesson["note"]}\n'
+                if lesson["url1"]:
+                    text += f"{lesson['url1_description']}: {lesson['url1']}\n"
+                if lesson["url2"]:
+                    text += f"{lesson['url2_description']}: {lesson['url2']}\n"
         else:
             text += f"Нет пар\n"
         text += "\n"
