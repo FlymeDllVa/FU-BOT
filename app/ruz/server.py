@@ -199,9 +199,9 @@ async def format_schedule(
                 if lesson["note"]:
                     text += f'Примечание: {lesson["note"]}\n'
                 if lesson["url1"]:
-                    text += f"{lesson['url1_description']}: {await link_formatter(lesson['url1'])}\n"
+                    text += lesson['url1_description'] + ": " + await link_formatter(lesson['url1']) + "\n"
                 if lesson["url2"]:
-                    text += f"{lesson['url2_description']}: {await link_formatter(lesson['url2'])}\n"
+                    text += lesson['url2_description'] + ": " + await link_formatter(lesson['url2']) + "\n"
         else:
             text += f"Нет пар\n"
         text += "\n"
