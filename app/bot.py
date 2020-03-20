@@ -20,6 +20,10 @@ from app.utils import strings
 import app.utils.keyboards as keyboards
 
 log = logging.getLogger(__name__)
+links_log = logging.getLogger(__name__ + ".links")
+links_log.setLevel(logging.INFO)
+links_log_handler = logging.FileHandler("links.log")
+links_log.addHandler(links_log_handler)
 
 
 class BotResponse(dict):
@@ -156,6 +160,7 @@ class Bot:
         if vk_link:
             return "@" + vk_link.groups()[1]
         link = await self.vk.utils.getShortLink(url=url)
+        links_log.info("%s %s", link['short_url'], url[:min(30, len(url))])
         return link["short_url"]
 
     async def vk_bot_answer_unread(self):
