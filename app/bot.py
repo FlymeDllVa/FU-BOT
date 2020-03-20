@@ -3,6 +3,7 @@ import datetime
 import random
 import logging
 from asyncio import AbstractEventLoop
+from re import match
 from urllib.parse import urlencode
 
 import ujson
@@ -147,6 +148,16 @@ class Bot:
         except Exception as e:
             log.warning(e)
 
+    async def get_short_link(self, url: str):
+        url = url.strip()
+        if not match(r'(https?://)([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*/?', url):
+            return url
+        vk_link = match(r'^(https?://)?vk\.com/([\w.-]+)+$', url)
+        if vk_link:
+            return "@" + vk_link.groups()[1]
+        link = await self.vk.utils.getShortLink(url=url)
+        return link["short_url"]
+
     async def vk_bot_answer_unread(self):
         unread = await self.vk.messages.getConversations(filter="unread", count=100)
         log.info("Answering %s unread messages", unread.get("unread_count", 0))
@@ -238,6 +249,7 @@ class Bot:
             text=text,
             show_groups=user.show_groups,
             show_location=user.show_location,
+            link_formatter=self.get_short_link
         )
         if schedule is None:
             log.warning(
@@ -302,6 +314,7 @@ class Bot:
             start_day=start_day,
             show_location=user.show_location,
             show_groups=user.show_groups,
+            link_formatter=self.get_short_link
         )
         if schedule is None:
             await self.send_msg(
@@ -604,6 +617,7 @@ class Bot:
             days=days,
             show_groups=True,
             show_location=True,
+            link_formatter=self.get_short_link
         )
         await self.update_user(
             user.id, data=dict(found_id=None, found_name=None, found_type=None)

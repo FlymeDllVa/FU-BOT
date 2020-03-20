@@ -134,6 +134,9 @@ async def get_teacher(teacher_name: str) -> list or None:
     return Data(teachers)
 
 
+async def default_link_formatter(link): return link
+
+
 async def format_schedule(
     id: int,
     type: str,
@@ -142,6 +145,7 @@ async def format_schedule(
     show_groups: bool = False,
     show_location: bool = False,
     text: str = "",
+    link_formatter: callable = default_link_formatter
 ) -> str or None:
     """
     Форматирует расписание к виду который отправляет бот
@@ -153,6 +157,7 @@ async def format_schedule(
     :param text: начальная строка, к которой прибавляется расписание
     :param start_day: начальная дата в количестве дней от сейчас
     :param days: количество дней
+    :param link_formatter: функция для обработки строк с сылками
     :return: строку расписания
     """
     date_start = datetime.datetime.now() + datetime.timedelta(days=start_day)
@@ -194,9 +199,9 @@ async def format_schedule(
                 if lesson["note"]:
                     text += f'Примечание: {lesson["note"]}\n'
                 if lesson["url1"]:
-                    text += f"{lesson['url1_description']}: {lesson['url1']}\n"
+                    text += f"{lesson['url1_description']}: {await link_formatter(lesson['url1'])}\n"
                 if lesson["url2"]:
-                    text += f"{lesson['url2_description']}: {lesson['url2']}\n"
+                    text += f"{lesson['url2_description']}: {await link_formatter(lesson['url2'])}\n"
         else:
             text += f"Нет пар\n"
         text += "\n"
