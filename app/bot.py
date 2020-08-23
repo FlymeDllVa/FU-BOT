@@ -59,8 +59,10 @@ class Bot:
         self.db = db
 
     @classmethod
-    def without_longpool(cls, session: BaseSession, loop: AbstractEventLoop = None):
-        return cls(session, loop=loop, without_longpool=True)
+    def without_longpool(
+        cls, session: BaseSession, loop: AbstractEventLoop = None, db: connection = None
+    ):
+        return cls(session, loop=loop, without_longpool=True, db=db)
 
     @staticmethod
     def parse_resp(resp):
@@ -156,6 +158,15 @@ class Bot:
                 )
         except Exception as e:
             log.warning(e)
+            if e.error_code == 901:
+                await self.update_user(
+                    peer_id,
+                    data=dict(
+                        subscription_time=None,
+                        subscription_group=None,
+                        subscription_days=None,
+                    ),
+                )
 
     async def get_short_link(self, url: str):
         url = url.strip()
@@ -264,11 +275,7 @@ class Bot:
             log.warning(
                 "Error getting schedule: user %s for %s", user.id, user.current_name
             )
-            await self.vk.messages.send(
-                peer_id=user.id,
-                random_id=get_random_id(),
-                message=strings.CANT_GET_SCHEDULE,
-            )
+            await self.send_msg(user.id, strings.CANT_GET_SCHEDULE)
             return None
         await self.send_msg(
             peer_id=user.id,

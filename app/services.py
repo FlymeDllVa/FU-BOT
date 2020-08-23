@@ -118,7 +118,7 @@ class BotSubscriptionService(Service):
     async def start(self):
         self.exit_event = Event()
         self.session = TokenSession(access_token=self.token, driver=FixedDriver())
-        self.bot = Bot.without_longpool(self.session, loop=self.loop)
+        self.bot = Bot.without_longpool(self.session, loop=self.loop, db=self.db_write)
 
         logging.getLogger("schedule").setLevel(logging.WARNING)
 
