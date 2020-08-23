@@ -20,10 +20,6 @@ from app.utils import strings
 import app.utils.keyboards as keyboards
 
 log = logging.getLogger(__name__)
-links_log = logging.getLogger(__name__ + ".links")
-links_log.setLevel(logging.INFO)
-links_log_handler = logging.FileHandler("links.log")
-links_log.addHandler(links_log_handler)
 
 
 class BotResponse(dict):
@@ -88,14 +84,19 @@ class Bot:
     async def handle_new_message(self, msg: BotResponse):
         try:
             async with self.db() as conn:
-                user = await (await conn.execute(User.search_user(msg.peer_id))).fetchone()
+                user = await (
+                    await conn.execute(User.search_user(msg.peer_id))
+                ).fetchone()
                 if user is None:
                     await conn.execute(User.add_user(msg.peer_id))
                     user = UserProxy(dict(id=msg.peer_id))
                 else:
                     user = UserProxy(user)
         except OperationalError:
-            await self.send_msg(msg.peer_id, "У нас что-то пошло не по плану, попробуй написать позже...")
+            await self.send_msg(
+                msg.peer_id,
+                "У нас что-то пошло не по плану, попробуй написать позже...",
+            )
         log.debug("New %r", user)
         payload = ujson.loads(msg.payload if "payload" in msg else "{}")
         message = msg.text.lower()
@@ -105,6 +106,8 @@ class Bot:
             or payload.get("command", "") == "start"
         ):
             await self.send_schedule_menu(user)
+        elif user.update == "2":
+            await self.user_update_2(user)
         elif const.PAYLOAD_MENU in payload:
             menu = payload[const.PAYLOAD_MENU]
             if menu in const.MENUS_LIST:
@@ -135,6 +138,8 @@ class Bot:
                 await self.send_day_schedule_text(user, message)
             elif message == "📅":
                 await self.chose_calendar(user)
+            elif message == "/debug":
+                await self.debug_message(user)
             else:
                 await self.send_schedule_menu(user)
 
@@ -154,13 +159,12 @@ class Bot:
 
     async def get_short_link(self, url: str):
         url = url.strip()
-        if not match(r'(https?://)([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*/?', url):
+        if not match(r"(https?://)([\da-z.-]+)\.([a-z.]{2,6})([/\w.-]*)*/?", url):
             return url
-        vk_link = match(r'^(https?://)?vk\.com/([\w.-]+)+$', url)
+        vk_link = match(r"^(https?://)?vk\.com/([\w.-]+)+$", url)
         if vk_link:
             return "@" + vk_link.groups()[1]
         link = await self.vk.utils.getShortLink(url=url)
-        links_log.info("%s %s", link['short_url'], url[:min(30, len(url))])
         return link["short_url"]
 
     async def vk_bot_answer_unread(self):
@@ -254,7 +258,7 @@ class Bot:
             text=text,
             show_groups=user.show_groups,
             show_location=user.show_location,
-            link_formatter=self.get_short_link
+            link_formatter=self.get_short_link,
         )
         if schedule is None:
             log.warning(
@@ -319,7 +323,7 @@ class Bot:
             start_day=start_day,
             show_location=user.show_location,
             show_groups=user.show_groups,
-            link_formatter=self.get_short_link
+            link_formatter=self.get_short_link,
         )
         if schedule is None:
             await self.send_msg(
@@ -622,7 +626,7 @@ class Bot:
             days=days,
             show_groups=True,
             show_location=True,
-            link_formatter=self.get_short_link
+            link_formatter=self.get_short_link,
         )
         await self.update_user(
             user.id, data=dict(found_id=None, found_name=None, found_type=None)
@@ -820,7 +824,9 @@ class Bot:
             }
         )
         log.info("%s asked for calendar for group %s", user.id, user.current_name)
-        await self.send_msg(user.id, f"https://schedule.fa.ru/?{query}", dont_parse_links=False)
+        await self.send_msg(
+            user.id, f"https://schedule.fa.ru/?{query}", dont_parse_links=False
+        )
 
     async def change_role(self, user: UserProxy, payload: dict = None):
         await self.send_msg(user.id, strings.WELCOME, keyboards.choose_role())
@@ -849,3 +855,14 @@ class Bot:
             async with self.db() as conn:
                 await conn.execute(cancel_changes)
         await self.send_schedule_menu(user, payload)
+
+    async def debug_message(self, user, payload: dict = None):
+        await self.send_msg(user.id, str(user))
+
+    async def user_update_2(self, user):
+        log.warning("Renew user %s group %s", user.id, user.current_name)
+        await self.update_user(
+            user.id, data=dict(current_name=None, role=None, update="3")
+        )
+        user.current_name = None
+        await self.send_schedule_menu(user)
