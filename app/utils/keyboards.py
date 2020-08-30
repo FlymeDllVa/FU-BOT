@@ -297,7 +297,7 @@ def found_list(
 
     for item in found_list[:9]:
         keyboard.add_button(
-            item[1],
+            item[1][:40],
             payload={
                 const.PAYLOAD_MENU: const.MENU_SET_TEACHER
                 if to_set

@@ -8,7 +8,7 @@ from aiomisc.service.base import Service
 from aiovk import TokenSession
 from aiovk.drivers import HttpDriver
 from aiohttp import ClientError
-from ujson import loads
+from ujson import loads, dumps
 
 from app.models import User, UserProxy
 from .dependency import connection
@@ -32,8 +32,7 @@ class FixedDriver(HttpDriver):
                 return await response.json(loads=loads)
         except (ClientError, TimeoutError):
             log.warning("Vk Timeout error on url %s", url)
-            await sleep(5)
-            return await self.json(url, params, timeout)
+            return '{"failed": 2}'
 
     async def get_text(self, url, params, timeout=None):
         try:
