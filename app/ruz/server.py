@@ -124,7 +124,7 @@ async def get_teacher(teacher_name: str) -> list or None:
     try:
         async with ClientSession() as client:
             request = await client.get(
-                f"https://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=lecturer",
+                f"https://ruz.fa.ru/api/search?term={quote(teacher_name)}&type=person",
                 timeout=2,
             )
             request_json = await request.json(loads=loads)
@@ -163,7 +163,7 @@ async def format_schedule(
     date_start = datetime.datetime.now() + datetime.timedelta(days=start_day)
     date_end = date_start + datetime.timedelta(days=days)
     schedule = await get_schedule(
-        id, date_start, date_end, type="lecturer" if type == "teacher" else "group"
+        id, date_start, date_end, type="person" if type == "teacher" else "group"
     )
     if schedule.has_error:
         return None

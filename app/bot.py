@@ -129,7 +129,7 @@ class Bot:
                         "Сделайте выбор кнопками внизу\n\nЕсли кнопки не отображаются - воспользуйтесь "
                         "официальным клиентом ВКонтакте последней версии",
                     )
-            elif user.found_name == const.CHANGES and user.found_id == 0:
+            elif user.found_name == const.CHANGES and user.found_id == "0":
                 if user.found_type == const.ROLE_TEACHER:
                     await self.search_teacher_schedule(user, message)
                 else:
@@ -457,7 +457,7 @@ class Bot:
             return user
         await self.update_user(
             user.id,
-            data=dict(found_id=0, found_name=const.CHANGES, found_type=found_type),
+            data=dict(found_id="0", found_name=const.CHANGES, found_type=found_type),
         )
         await self.send_msg(
             user.id, message, keyboards.empty_keyboard(),
@@ -826,7 +826,7 @@ class Bot:
         query = urlencode(
             {
                 "name": user.current_name,
-                "type": "group" if user.role == "student" else "lecturer",
+                "type": "group" if user.role == "student" else "person",
                 "id": user.current_id,
             }
         )
