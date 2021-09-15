@@ -2,7 +2,7 @@ aiohttp
 aiomisc
 aiomisc_dependency
 aiomysql
-aiovk
+aiovk==4.0.0
 alembic
 marshmallow
 schedule

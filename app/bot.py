@@ -8,10 +8,10 @@ from urllib.parse import urlencode
 
 import ujson
 from aiovk import API
-from aiovk.longpoll import BotsLongPoll
 from aiovk.sessions import BaseSession
 from pymysql import OperationalError
 
+from app.longpoll import BotsLongPoll
 from app.dependency import connection
 from app.models import User, UserProxy
 import app.utils.constants as const
@@ -52,7 +52,7 @@ class Bot:
             raise RuntimeError("DB must be set")
         self.vk = API(session)
         if not without_longpool:
-            self.longpool = BotsLongPoll(session, group_id=group_id, mode=mode)
+            self.longpool = BotsLongPoll(session, group_id=group_id)
         else:
             self.longpool = None
         self.loop = loop or asyncio.get_running_loop()
@@ -67,7 +67,7 @@ class Bot:
     @staticmethod
     def parse_resp(resp):
         return (
-            BotResponse(**update["object"]["message"])
+            BotResponse(**update["object"])
             for update in resp["updates"]
             if update["type"] == "message_new"
         )

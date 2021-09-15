@@ -18,6 +18,10 @@ from .utils import constants as const
 log = logging.getLogger(__name__)
 
 
+class TokenSessionFixed(TokenSession):
+    API_VERSION = "5.81"
+
+
 class FixedDriver(HttpDriver):
     async def json(self, url, params, timeout=None):
         try:
@@ -52,7 +56,7 @@ class BotService(Service):
     db_write: connection
 
     async def start(self):
-        self.session = TokenSession(access_token=self.token, driver=FixedDriver())
+        self.session = TokenSessionFixed(access_token=self.token, driver=FixedDriver())
         bot = Bot(
             self.session, group_id=self.group_id, loop=self.loop, db=self.db_write
         )
@@ -116,7 +120,7 @@ class BotSubscriptionService(Service):
 
     async def start(self):
         self.exit_event = Event()
-        self.session = TokenSession(access_token=self.token, driver=FixedDriver())
+        self.session = TokenSessionFixed(access_token=self.token, driver=FixedDriver())
         self.bot = Bot.without_longpool(self.session, loop=self.loop, db=self.db_write)
 
         logging.getLogger("schedule").setLevel(logging.WARNING)
